@@ -1,0 +1,20 @@
+{
+    "BoxItems":[
+        {
+            "ContextMenu":"Home",
+            "DisplayText":"",
+            "Link":"header"   
+        },
+        {
+            "ContextMenu":"Tools",
+            "DisplayText":"",
+            "Link":"header",
+            "AllowedExtensions" : ".rpp" 
+        },
+        {
+            "ContextMenu":"Private",
+            "DisplayText":"-可以在窗口模式下拖进来常用的东西",
+            "Link":"header"   
+        }
+    ]
+ }

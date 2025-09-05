@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "Setting",
+      "ContextMenu": "Home",
+      "Link": "${AppRoot}\\ShortsGen\\config.json",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": false
+    }
+  ]
+}
