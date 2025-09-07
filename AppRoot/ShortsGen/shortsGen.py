@@ -6,9 +6,15 @@ from youtube_transcript_api import YouTubeTranscriptApi
 import json
 import openai 
 import time
+from imageGen import ImageGen
+from datetime import datetime
+
+
 
 
 client = None
+imgClient = None
+
 currentDir = ""
 currentPath = ""
 if getattr(sys, 'frozen', False):
@@ -26,18 +32,24 @@ defaultConfigData = {
     "LLM_maxTries": 10, 
     "LLM_chunkSize": 1500,
     "LLM_ScriptLength": 5000,
+    "Img_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
+    "Img_url": "https://api.poe.com/v1",
+    "Img_model": "Gemini-2.5-Flash-Image",
+    "Img_runLocal": True,
     "translate_to": "Chinese"
 }
 configData = None
 
 
 def init():
-    global defaultConfigData, configData, client
+    global defaultConfigData, configData, client, imgClient
     configFile = os.path.join(currentDir, "config.json")
     try:
         with open(configFile, 'r', encoding='utf-8') as file:
             configData = json.load(file)
             client = openai.OpenAI(api_key=configData["LLM_key"],base_url=configData["LLM_url"])
+            imgClient = ImageGen(key=configData["Img_Key"],url=configData["Img_url"], runLocal=configData["Img_runLocal"],)
+            imgClient.model = configData["Img_model"]
     except Exception as e:
         if os.path.exists(configFile):
             os.remove(configFile)
@@ -89,7 +101,7 @@ f"你是一个视频分镜生成AI。根据输入的视频文稿,仅提取与主
 +"""
 1. `index`: 分镜序号, 从1开始
 2. `voiceover`: 分镜的稿子内容(10到100字, 中文)
-3. `image`: 分镜的图片描述
+3. `image`: 分镜的图片描述(this needs to be written in English in the format of image generation prompt)
 
 输出格式为 JSON 数组，如下：
 
@@ -121,7 +133,7 @@ f"你是一个视频分镜生成AI。根据输入的视频文稿,仅提取与主
             print(result)
             print("-------------------------------------")
         except Exception as e:
-                print(f"! exception:{e}\nretrying{tries + 1}/{configData["maxTries"]}...")
+                print(f"! exception:{e}\nretrying{tries + 1}/{configData['maxTries']}...")
                 return send_prompt(content, model=model, max_tokens=max_tokens, tries=tries+1)
         return result_ls
     except Exception as e:
@@ -131,24 +143,102 @@ f"你是一个视频分镜生成AI。根据输入的视频文稿,仅提取与主
 
 
 
+def makeFolderPath():
+    folderPath = os.path.join(currentDir, datetime.now().strftime("%Y-%m-%d_%H-%M-%S"))
+    return folderPath
 
-def generateVoiceOver(content):
+def generateVoiceOver(content, folderPath):
     for voiceLine in content:
         if isinstance(voiceLine, dict):
+            fileName = os.path.join(folderPath, f"{voiceLine['index']}.wav")
             voiceLine = voiceLine["voiceover"]
-        print(voiceLine)
-    pass
+            voiceGen.generateVoice(voiceLine, fileName)
+            print(voiceLine)
 
-def generateImages(content):
-    pass
+def generateImages(content, folderPath):
+    for image in content:
+        if isinstance(image, dict):
+            imagePrompt = image["image"]
+            fileName = os.path.join(folderPath, f"{image['index']}.png")
+            print(imagePrompt)
+            imgClient.generateImage(imagePrompt, fileName)
+
+def findSources(folderPath):
+    wav_files = []
+    png_files = []
+    
+    # Traverse the directory to find .wav files
+    for root, dirs, files in os.walk(folderPath):
+        for file in files:
+            if file.lower().endswith('.wav'):
+                wavFile = os.path.join(root, file)
+                wav_files.append(wavFile)
+                pngFile = f"{os.path.splitext(wavFile)[0]}.png"
+                if os.path.exists(pngFile):
+                    png_files.append(pngFile)
+    
+    # Sort the files based on their numeric suffix
+    wav_files.sort(key=lambda x: int(os.path.basename(x).split('.')[0]))
+    png_files.sort(key=lambda x: int(os.path.basename(x).split('.')[0]))
+    
+    # Check if the number of files matches
+    if len(wav_files) != len(png_files):
+        print("! 图片和视频文件数量不同")
+    
+    return wav_files, png_files
+
 
 init()
-videoLink = "https://www.youtube.com/watch?v=ePctDtjShfA"
-content = getContentFromLink(videoLink)
-print(f"{content}\n以上为提取到的内容")
+# videoLink = "https://www.youtube.com/watch?v=oK3JOfPFuGw"
+# content = getContentFromLink(videoLink)
+# print(f"{content}\n以上为提取到的内容")
 
-storyBoard = send_prompt(content)
+# storyBoard = send_prompt(content)
+# folderPath = makeFolderPath()
+# print("\n\n开始生成语音")
+# print("------------------------------")
+#import voiceGen
+# generateVoiceOver(storyBoard, folderPath)
+# print("------------------------------")
+# print("语音生成完毕")
 
-generateVoiceOver(storyBoard)
 
 
+# print("\n\n开始生成图片")
+# print("------------------------------")
+# generateImages(storyBoard, folderPath)
+# print("------------------------------")
+# print("图片生成完毕")
+
+folderPath = os.path.join(currentDir, "yst")
+audios, images = findSources(folderPath)
+from moviepy.video.VideoClip import ImageClip
+
+from moviepy.video.compositing import CompositeVideoClip
+from moviepy.audio.io.AudioFileClip import AudioFileClip
+import moviepy.audio.AudioClip
+
+
+
+print("\n\n开始生成视频")
+print("------------------------------")
+# Lists of image and audio file paths (in matching order)
+
+
+clips = []  # Store video clips
+audioClips = []
+for image_path, audio_path in zip(images, audios):
+    audio = AudioFileClip(audio_path)
+    img_clip = ImageClip(image_path, duration=audio.duration)
+    img_clip.audio = audio
+    clips.append(img_clip)
+    # audioClips.append(audio)
+
+# Concatenate all clips into one video
+final_clip = CompositeVideoClip.concatenate_videoclips(clips, method='compose')
+# final_clip_audio =  moviepy.audio.AudioClip.CompositeAudioClip(audioClips)
+
+# Export the final video
+final_clip.write_videofile(os.path.join(folderPath, "output.mp4"), fps=24, codec='libx264', audio_codec='aac')
+print("------------------------------")
+print("视频生成完毕")
