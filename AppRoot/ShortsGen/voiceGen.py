@@ -2,6 +2,10 @@ from gradio_client import Client, handle_file
 import os
 import sys
 import shutil
+import openai
+import requests
+import re
+
 
 
 
@@ -17,12 +21,15 @@ else:
 
 
 
-client = Client("http://localhost:9872/")
+client_local = None
 
 
-
-def generateVoice(prompt, outputPath):
-    result = client.predict(
+# 本地生成函数, 需要打开并设置好本地服务器再使用
+def generateVoice_local(prompt, outputPath):
+    global client_local
+    if client_local == None:
+        client_local = Client("http://localhost:9872/") #端口号记得填正确
+    result = client_local.predict(
             ref_wav_path=handle_file(os.path.join(currentDir, "audio.wav")),
             prompt_text="",
             prompt_language="中文",
@@ -43,3 +50,43 @@ def generateVoice(prompt, outputPath):
     )
     shutil.copy(result, outputPath)
     os.remove(result)
+
+
+
+
+class VoiceGen:
+    model = "Hailuo-Speech-02"
+    runLocal = False
+    def __init__(self, url, key, runLocal = False):
+        if runLocal:
+            self.runLocal = runLocal
+        else:  
+            self.client = openai.OpenAI(api_key=key, base_url=url)
+        
+    def generateVoice(self, prompt, outputPath):
+        result = None
+        if not self.runLocal:
+            try:
+                result = self.client.chat.completions.create(
+                    model="Hailuo-Speech-02",
+                    messages=[{"role": "user", "content": prompt}]
+                )
+                urls = re.findall(r'https?://[^\s\)]+', result.choices[0].message.content)
+                url = urls[-1]
+                response = requests.get(url)
+                if response.status_code == 200:
+                    with open(outputPath, "wb") as f:
+                        f.write(response.content)
+                    print(f"Voice saved as: {outputPath}")
+                else:
+                    print("Failed to download Voice:", response.status_code)
+            except Exception as e:
+                print(f"错误: {e}")
+                print(f"语音生成失败: {prompt}\n返回结果: {result}")
+        else:
+            print("本地模型生成.....")
+            try:
+                generateVoice_local(prompt, outputPath)
+            except Exception as e:
+                print(f"错误: {e}")
+                print(f"语音生成失败: {prompt}\n返回结果{result}")   

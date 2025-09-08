@@ -17,6 +17,8 @@ else:
 
 class ImageGen:
     model = "Gemini-2.5-Flash-Image"
+    systemPrompt = ""
+    runLocal = False
     def __init__(self, url, key, runLocal = False):
         if runLocal:
             self.runLocal = True
@@ -29,7 +31,7 @@ class ImageGen:
             try:
                 result = self.client.chat.completions.create(
                     model="Gemini-2.5-Flash-Image",
-                    messages=[{"role": "system", "content": "Your answer should only contain an image url and nothing else"},
+                    messages=[{"role": "system", "content": self.systemPrompt},
                             {"role": "user", "content": prompt}]
                 )
                 urls = re.findall(r'https?://[^\s\)]+', result.choices[0].message.content)
