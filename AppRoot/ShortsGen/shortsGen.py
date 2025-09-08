@@ -55,7 +55,7 @@ defaultStoryPrompt = """
 输出格式为一个JSON 数组，包含以下信息:
 1. `index`: 分镜序号, 从1开始
 2. `voiceover`: 分镜的稿子内容(10到300字, 稿子内容需要为中文, )
-3. `image`: 分镜的图片描述(this needs to be written in English in the format of image generation prompts)
+3. `image`: 简短的分镜的图片描述(this needs to be written in English in the format of image generation prompts)
 
 格式参考：
 {"result": [
@@ -162,7 +162,19 @@ def getContentFromLink(videoLink):
         content += chunk.text
     return content
 
-def generateStoryBoard(content, max_tokens=4000, outputPath = None):
+def extract_json_content_regex(text):
+    pattern = ""
+    for t in text:
+        if t in ["{", "["]:
+            if t == "{":
+                pattern = r'\{.*\}'
+                break
+            else:
+                pattern = r'\[.*\]'
+    match = re.search(pattern, text, re.DOTALL)
+    return match.group(0) if match else text
+
+def generateStoryBoard(content, outputPath = None):
     try:
         model = configData["LLM_model"]
         print(f"当前使用模型: {model}")
@@ -181,6 +193,7 @@ def generateStoryBoard(content, max_tokens=4000, outputPath = None):
             ]
         )
         result = completion.choices[0].message.content
+        result = extract_json_content_regex(result)
         print(result)
         try:
             result_ls = json.loads(result)
@@ -207,16 +220,18 @@ def generateStoryBoard(content, max_tokens=4000, outputPath = None):
         print(f"!_错误: {e}!_")
         return None, None
     
-def sendPrompt(userPrompt, systemPrompt= "", max_tokens=3000):
-    formatInstruction = """\nProvide a straight response without reiterating the input, Your response must be enclosed as a child in the following json structure(even if your answer is already an json object)\n
+def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPrompt = ""):
+    formatInstruction = """\nDo not reiterate the input, Your response must be enclosed as a child oject in the following json structure\n
     {"response":"your response"}
     """ 
+    if modifyJson:
+        formatInstruction = "\ncrucial: your job is to modify the input json data, and your response should be in the exact same format as the input"
     systemPrompt += formatInstruction
     try:
         model = configData["LLM_model"]
         completion = client.chat.completions.create(
             model=model,
-            max_tokens=max_tokens,
+            max_tokens=configData["LLM_maxToken"],
             response_format={"type": "json_object"},
             messages=[
                 {"role": "system",
@@ -224,14 +239,20 @@ def sendPrompt(userPrompt, systemPrompt= "", max_tokens=3000):
                 },
                 {
                     "role": "user",
-                    "content": f"{userPrompt}"
+                    "content": f"{userPrompt}\n\n{additionalPrompt}"
                 }
             ]
-        )
+        )        
         result = completion.choices[0].message.content
-        print(result)
-        result = json.loads(result)["response"]
-        print(result)
+        print("####AI请求开始####")
+        print(f"systemPrompt: {systemPrompt}")
+        print(f"userPrompt: {userPrompt}")
+        print("####AI请求结束####")
+        print(f"结果:\n{result}")
+        result = extract_json_content_regex(result)
+        result = json.loads(result)
+        if not modifyJson:
+            result = result["response"]
         return result
     except Exception as e:
         print(f"!_错误: {e}!_")
@@ -243,39 +264,47 @@ def readStoryBoard(folderPath):
         if os.path.isdir(folderPath):
             projectName = os.path.basename(folderPath)
             folderPath = os.path.join(folderPath, f"{projectName}.json")
-    if not os.path.exists(folderPath) or not folderPath.endswith(".json"):
-        print("! 分镜文件不存在或不是json文件")
+    if not os.path.exists(folderPath) or not folderPath.lower().endswith('.json'):
+        print(f"! 分镜文件不存在或不是json文件: {folderPath}")
         return
-    
     with open(folderPath, 'r', encoding='utf-8') as file:
         result = json.load(file)
-        try:
-            result[0]["index"]
-            result[0]["voiceover"]
-            result[0]["image"]
-        except Exception as e:
+        if isValidStoryBoard(result):
+            return result
+        else:
             print(f"! 分镜文件内容无效:{e}\n{result}")
             return None
-        return result
+        
+
+def isValidStoryBoard(storyBoardData):
+    try:
+        storyBoardData[0]["index"]
+        storyBoardData[0]["voiceover"]
+        storyBoardData[0]["image"]
+    except Exception:
+        return False
+    return True
+
+
 
 
 def generateVoiceOver(content, folderPath, index=None):
-    for sence in content:
-        if isinstance(voiceLine, dict):
-            if index != None and sence['index'] != index:
+    for scene  in content:
+        if isinstance(scene , dict):
+            if index != None and scene ['index'] != index:
                 continue
-            fileName = os.path.join(folderPath, f"{sence['index']}.wav")
-            voiceLine = sence["voiceover"]
+            fileName = os.path.join(folderPath, f"{scene ['index']}.wav")
+            voiceLine = scene ["voiceover"]
             voiceClient.generateVoice(voiceLine, fileName)
             print(f"生成语音: {voiceLine}")
 
 def generateImages(content, folderPath, index=None):
-    for sence in content:
-        if isinstance(sence, dict):
-            if index != None and sence['index'] != index:
+    for scene  in content:
+        if isinstance(scene , dict):
+            if index != None and scene ['index'] != index:
                 continue
-            imagePrompt = sence["image"]
-            fileName = os.path.join(folderPath, f"{sence['index']}.png")
+            imagePrompt = scene ["image"]
+            fileName = os.path.join(folderPath, f"{scene['index']}.png")
             print(f"生成图片: {imagePrompt} ")
             imgClient.generateImage(imagePrompt, fileName)
 
@@ -292,89 +321,164 @@ def rework(files, cacheOriginal = True):
     storyBoard = []
     for file in files:
         json_files = [f for f in os.listdir(os.path.dirname(file)) if f.endswith('.json')]
-        for json in json_files:
+        for jsonfile in json_files:
+            jsonfile = os.path.join(os.path.dirname(file), jsonfile)
             try:
-                storyBoard = readStoryBoard(file)
-                storyFile = file
+                storyBoard = readStoryBoard(jsonfile)
+                storyFile = jsonfile
                 break
             except Exception as e:
-                print(f"! 发现一个无效的分镜文件: {json}")
+                print(f"! 发现一个无效的分镜文件: {jsonfile}")
         if storyBoard != "":
             break
 
     for file in files:
         index = os.path.basename(file)
-        index, ext = int(os.path.splitext(index))
+        index, ext = os.path.splitext(index)
         if cacheOriginal:
             folder = os.path.dirname(file)
-            cacheFolder = os.makedirs(os.path.join(folder, "oldAssets"), exist_ok=True)
+            cacheFolder = os.path.join(folder, "oldAssets")
+            os.makedirs(os.path.join(folder, "oldAssets"), exist_ok=True)
             cacheFile = os.path.join(cacheFolder, os.path.basename(file))
             copy_file_with_timestamp(file, cacheFile)
         if file.lower().endswith(".wav"):
-            generateVoiceOver(storyBoard, os.path.dirname(file), index = index)
+            generateVoiceOver(storyBoard, os.path.dirname(file), index = int(index))
         elif file.lower().endswith(".png"):
-            generateImages(storyBoard, os.path.dirname(file), index = index)
+            generateImages(storyBoard, os.path.dirname(file), index = int(index))
         elif file == storyFile:
-            pass
-    
+            newStoryBoard = []
+            additionalPrompt = input("请输入分镜的修改要求: ")
+            while additionalPrompt != "":
+                userPrompt = json.dumps(storyBoard, ensure_ascii=False)
+                systemPrompt = "你是一个分镜助理, 你需要按照用户的要求修改用户提供的json分镜中的内容, 并返回一个相同格式的json分镜\n"
+                print("正在生成新的分镜稿...")
+                newStoryBoard = sendPrompt(userPrompt, systemPrompt, modifyJson=True, additionalPrompt=additionalPrompt)
+                print(newStoryBoard)
+                if isValidStoryBoard(newStoryBoard):
+                    print("(^_^)格式通过验证, 请放心使用")
+                else:
+                    print("! 格式不正确, 建议重试")
+                additionalPrompt = input("按回车采用分镜稿, 你也可以继续输入修改意见来重试: ")
+            with open(file, 'w', encoding='utf-8') as file:
+                json.dump(newStoryBoard, file, ensure_ascii=False, indent=2)
+                print(f"新分镜保存到了: {file}")
 
 
-init()
-# videoLink = "https://www.youtube.com/watch?v=oK3JOfPFuGw"
-# content = getContentFromLink(videoLink)
-# print(f"{content}\n以上为提取到的内容")
-
-
-# print("\n\n开始生成分镜")
-# print("------------------------------")
-# storyBoard, storyPath = generateStoryBoard(content, outputPath=outputPath_storyBoard)
-# folderPath = os.path.dirname(storyPath)
-# print("------------------------------")
-# print("分镜生成完毕")
-
-
-
-# print("\n\n开始生成语音")
-# print("------------------------------")
-# generateVoiceOver(storyBoard, folderPath)
-# print("------------------------------")
-# print("语音生成完毕")
-
-
-
-# print("\n\n开始生成图片")
-# print("------------------------------")
-# generateImages(storyBoard, folderPath)
-# print("------------------------------")
-# print("图片生成完毕")
-
-# # storyFile = input("input: ")
-# # folderPath = storyFile
-# # storyBoard = readStoryBoard(storyFile)
-
-
-# print("\n\n开始合成视频")
-# print("------------------------------")
-# images, voices = videoEditor.findSources(folderPath)
-# videoEditor.makeVideo(images, voices, folderPath)
-# print("------------------------------")
-# print("视频合成完毕")
-
+def remove_quotes(s):
+    if (s.startswith('"') and s.endswith('"')) or (s.startswith("'") and s.endswith("'")):
+        return s[1:-1]
+    return s
 
 
 
 if __name__ == "__main__":
     init()
+    print()
     arg = None
-    filePath = None
+    filePath = ""
+    fileList = []
     if len(sys.argv) > 1:
         arg = sys.argv[1]
         if len(sys.argv) > 2:
             filePath = sys.argv[2]
-    if arg == None:
-        arg = input("argument: ")
+    choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4"}
+    while arg not in choices.values():
+        print("操作列表")
+        for key, value in choices.items():
+            print(f"{value}: {key}")
+        arg = remove_quotes(input("请输入操作序号: "))
 
-    if arg == "rework":
-        while filePath == None or not os.path.exists(filePath):
-            filePath = input("拖入需要重新生成的文件(分镜稿, 图片或音频):\n")
+    if arg == "1":
+        while filePath == "" :
+            filePath = input("拖入分镜稿, txt文档或复制油管链接(需包含字幕), 生成图片, 语音和视频: \n")
+            filePath = remove_quotes(filePath)
+            if filePath.startswith("http") or os.path.exists(filePath):
+                break
+        
+    if arg == "2":
+        while filePath == "" or not os.path.exists(filePath):
+            filePath = remove_quotes(input("拖入分镜稿, 仅生成图片: \n"))
+            
+
+    if arg == "3":
+        while filePath == "" or not os.path.exists(filePath):
+            filePath = remove_quotes(input("拖入分镜稿, 仅生成语音: \n"))
+
+    if arg == "4":
+        while len(fileList) == 0:
+            filePath = input("拖入需要重新生成的文件(分镜稿, 图片或语音): \n")
+            fileList_unchecked = filePath.split(" ")
+            hasStoryBoard = False
+            for file in fileList_unchecked:
+                file = remove_quotes(file)
+                if file.endswith(".json"):
+                    hasStoryBoard = True
+                if not os.path.exists(file):
+                    print(f"文件不合规: {file}")
+                    fileList = []
+                    break
+                fileList.append(file)
+            if len(fileList) > 1 and hasStoryBoard:
+                print("! 分镜稿仅支持单独处理, 你可以先修改分镜稿再通过分镜稿生成图片和音频\n")
+                fileList = []
+
+    if arg == "0":
+        while filePath == "" or not os.path.exists(filePath):
+            filePath = remove_quotes(input("拖入分镜稿或项目文件夹(请先确保图片和语音已生成), 合成视频: \n"))
+                
+                
+
+    content = ""
+    folderPath = ""
+    if arg in ["1", "2", "3"]:
+        if filePath.startswith("http"):
+            videoLink = filePath
+            content = getContentFromLink(videoLink)
+            print(f"{content}\n以上为提取到的内容")
+        elif filePath.endswith(".txt"): 
+            with open(filePath, 'r', encoding='utf-8') as file:
+                content = file.read()
+                print(f"{content}\n以上为读取到的内容")
+        if content != "":
+            print("\n\n开始生成分镜")
+            print("------------------------------")
+            storyBoard, storyPath = generateStoryBoard(content, outputPath=outputPath_storyBoard)
+            folderPath = os.path.dirname(storyPath)
+            print("------------------------------")
+            print("分镜生成完毕")
+
+        else:#直接给的分镜文件，读分镜
+            print("正在读取分镜文件...")
+            storyBoard = readStoryBoard(filePath)
+            folderPath = os.path.dirname(filePath)
+
+    if arg in ["1", "2"]:
+        print("\n\n开始生成图片")
+        print("------------------------------")
+        generateImages(storyBoard, folderPath)
+        print("------------------------------")
+        print("图片生成完毕")
+
+    if arg in ["1", "3"]:   
+        print("\n\n开始生成语音")
+        print("------------------------------")
+        generateVoiceOver(storyBoard, folderPath)
+        print("------------------------------")
+        print("语音生成完毕")
+
+    if arg in ["4"]:
+        rework(fileList)
+
+    if arg in ["0", "1"]:
+        print("\n\n开始合成视频")
+        print("------------------------------")
+        if folderPath == "": 
+            folderPath = filePath
+        if not os.path.isdir(folderPath):
+            folderPath = os.path.dirname(folderPath)
+        images, voices = videoEditor.findSources(folderPath)
+        videoEditor.makeVideo(images, voices, folderPath)
+        print("------------------------------")
+        print("视频合成完毕")
+
 

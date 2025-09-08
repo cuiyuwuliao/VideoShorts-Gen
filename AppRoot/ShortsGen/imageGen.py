@@ -30,7 +30,7 @@ class ImageGen:
         if not self.runLocal:
             try:
                 result = self.client.chat.completions.create(
-                    model="Gemini-2.5-Flash-Image",
+                    model=self.model,
                     messages=[{"role": "system", "content": self.systemPrompt},
                             {"role": "user", "content": prompt}]
                 )

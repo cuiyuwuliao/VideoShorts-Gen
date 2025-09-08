@@ -4,6 +4,8 @@ from moviepy.audio.io.AudioFileClip import AudioFileClip
 import os
 
 def findSources(folderPath):
+    if not os.path.isdir(folderPath):
+        folderPath = os.path.dirname(folderPath)
     wav_files = []
     png_files = []
     png_lost = []
