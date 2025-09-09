@@ -57,6 +57,7 @@ def generateVoice_local(prompt, outputPath):
 class VoiceGen:
     model = "Hailuo-Speech-02"
     runLocal = False
+    voiceParams = ""
     def __init__(self, url, key, runLocal = False):
         if runLocal:
             self.runLocal = runLocal
@@ -69,7 +70,7 @@ class VoiceGen:
             try:
                 result = self.client.chat.completions.create(
                     model="Hailuo-Speech-02",
-                    messages=[{"role": "user", "content": prompt}]
+                    messages=[{"role": "user", "content": prompt+self.voiceParams}]
                 )
                 urls = re.findall(r'https?://[^\s\)]+', result.choices[0].message.content)
                 url = urls[-1]

@@ -2,6 +2,9 @@ from moviepy.video.VideoClip import ImageClip
 from moviepy.video.compositing import CompositeVideoClip
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 import os
+import math
+from PIL import Image
+import numpy
 
 def findSources(folderPath):
     if not os.path.isdir(folderPath):
@@ -48,6 +51,7 @@ def makeVideo(images, audios, folderPath, transitionTime = 0):
         audio = AudioFileClip(audio_path)
         senceDuration = audio.duration + transitionTime
         img_clip = ImageClip(image_path, duration=senceDuration)
+        img_clip = zoom_in_effect(img_clip)
         img_clip.audio = audio
         clips.append(img_clip)
 
@@ -58,4 +62,35 @@ def makeVideo(images, audios, folderPath, transitionTime = 0):
         filename = os.path.join(folderPath, f"{os.path.basename(folderPath)}.mp4")
     else:
         filename = folderPath
-    final_clip.write_videofile(filename, fps=1, codec='libx264', audio_codec='aac')
+    final_clip.write_videofile(filename, fps=10, codec='libx264', audio_codec='aac')
+
+
+def zoom_in_effect(clip, zoom_ratio=0.04):
+    def effect(get_frame, t):
+        img = Image.fromarray(get_frame(t))
+        base_size = img.size
+
+        new_size = [
+            math.ceil(img.size[0] * (1 + (zoom_ratio * t))),
+            math.ceil(img.size[1] * (1 + (zoom_ratio * t)))
+        ]
+
+        # The new dimensions must be even.
+        new_size[0] = new_size[0] + (new_size[0] % 2)
+        new_size[1] = new_size[1] + (new_size[1] % 2)
+
+        img = img.resize(new_size, Image.LANCZOS)
+
+        x = math.ceil((new_size[0] - base_size[0]) / 2)
+        y = math.ceil((new_size[1] - base_size[1]) / 2)
+
+        img = img.crop([
+            x, y, new_size[0] - x, new_size[1] - y
+        ]).resize(base_size, Image.LANCZOS)
+
+        result = numpy.array(img)
+        img.close()
+
+        return result
+
+    return clip.transform(effect)

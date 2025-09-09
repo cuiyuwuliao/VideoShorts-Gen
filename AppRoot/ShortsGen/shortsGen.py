@@ -83,6 +83,7 @@ def init():
     configFile = os.path.join(currentDir, "config.json")
     promptFile_story = os.path.join(currentDir, "prompt_分镜.txt")
     promptFile_image = os.path.join(currentDir, "prompt_图片.txt")
+    promptFile_voice = os.path.join(currentDir, "prompt_语音.txt")
     try:
         with open(configFile, 'r', encoding='utf-8') as file:
             configData = json.load(file)
@@ -137,6 +138,23 @@ def init():
                 print(f"\n**读取到自定义图片prompt:\n{imgClient.systemPrompt}")
     except Exception as e:
         print(f"\n处理图片prompt文件时遇到错误: {e}")
+    try:
+        if not os.path.exists(promptFile_voice):
+            # Write the default content to the file with UTF-8 encoding
+            with open(promptFile_voice, 'w', encoding='utf-8') as file:
+                file.write("")
+                print(f"\n没有找到语音prompt文件, 已自动创建默认prompt文件: {promptFile_voice}")
+                voiceClient.voiceParams = ""
+        # Read the file and extract content as a single string with UTF-8 encoding
+        with open(promptFile_voice, 'r', encoding='utf-8') as file:
+            voiceClient.voiceParams = file.read()
+            if voiceClient.voiceParams == "":
+                voiceClient.voiceParams = defaultImagePrompt
+                print(f"\n你没有写语音prompt风格参数, 将使用模型的默认风格")
+            else:
+                print(f"\n**读取到自定义语音prompt:\n{voiceClient.voiceParams}")
+    except Exception as e:
+        print(f"\n处理语音prompt文件时遇到错误: {e}")
 
 
 def extract_youtube_video_id(url):
@@ -288,7 +306,7 @@ def isValidStoryBoard(storyBoardData):
 
 
 
-def generateVoiceOver(content, folderPath, index=None):
+def generateVoiceOver(content, folderPath, index=None, useParams=True):
     for scene  in content:
         if isinstance(scene , dict):
             if index != None and scene ['index'] != index:
@@ -487,5 +505,7 @@ if __name__ == "__main__":
         videoEditor.makeVideo(images, voices, folderPath)
         print("------------------------------")
         print("视频合成完毕")
+    
+    input("\n@(^_^)@运行结束, 可以关闭咯!")
 
 
