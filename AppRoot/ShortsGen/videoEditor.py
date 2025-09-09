@@ -13,15 +13,14 @@ def findSources(folderPath):
     png_files = []
     png_lost = []
     # Traverse the directory to find .wav files
-    for root, dirs, files in os.walk(folderPath):
-        for file in files:
-            if file.lower().endswith('.wav'):
-                wavFile = os.path.join(root, file)
-                wav_files.append(wavFile)
-                pngFile = f"{os.path.splitext(wavFile)[0]}.png"
-                png_files.append(pngFile)
-                if not os.path.exists(pngFile):
-                    png_lost.append(pngFile)
+    for file in os.listdir(folderPath):
+        if file.lower().endswith('.wav'):
+            wavFile = os.path.join(folderPath, file)
+            wav_files.append(wavFile)
+            pngFile = f"{os.path.splitext(wavFile)[0]}.png"
+            png_files.append(pngFile)
+            if not os.path.exists(pngFile):
+                png_lost.append(pngFile)
     
     # Sort the files based on their numeric suffix
     wav_files.sort(key=lambda x: int(os.path.basename(x).split('.')[0]))
