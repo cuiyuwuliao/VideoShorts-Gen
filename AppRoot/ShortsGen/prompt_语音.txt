@@ -1,1 +1,1 @@
---language Chinese --pitch 1 --speed 1.1 --voice Sweet_Girl_2 --volume 1.3
+--language Chinese --speed 1.1 --voice Sweet_Girl_2 --volume 1.3
