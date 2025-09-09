@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "API和模型相关设置",
+      "ContextMenu": "Setting",
+      "Link": "${AppRoot}\\ShortsGen\\config.json",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": true
+    }
+  ]
+}

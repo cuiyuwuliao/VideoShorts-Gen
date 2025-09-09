@@ -2,9 +2,9 @@
   "BoxItems": [
     {
       "ImagePath": null,
-      "DisplayText": "Setting",
+      "DisplayText": "重做指定资产",
       "ContextMenu": "Home",
-      "Link": "${AppRoot}\\ShortsGen\\config.json",
+      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py 4",
       "AllowedExtensions": null,
       "FilePath": null,
       "IsLarge": false

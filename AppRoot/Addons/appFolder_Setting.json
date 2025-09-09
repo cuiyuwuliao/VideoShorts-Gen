@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "打开默认输出文件夹",
+      "ContextMenu": "Setting",
+      "Link": "${AppRoot}\\ShortsGen",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": false
+    }
+  ]
+}

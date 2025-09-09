@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "从文本生成分镜稿",
+      "ContextMenu": "Home",
+      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py 5",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": false
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "从稿子生成视频",
+      "ContextMenu": "Home",
+      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py 1",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": true
+    }
+  ]
+}

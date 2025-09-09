@@ -381,7 +381,7 @@ if __name__ == "__main__":
         arg = sys.argv[1]
         if len(sys.argv) > 2:
             filePath = sys.argv[2]
-    choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4"}
+    choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4", "StoryBoard": "5"}
     while arg not in choices.values():
         print("操作列表")
         for key, value in choices.items():
@@ -425,12 +425,19 @@ if __name__ == "__main__":
     if arg == "0":
         while filePath == "" or not os.path.exists(filePath):
             filePath = remove_quotes(input("拖入分镜稿或项目文件夹(请先确保图片和语音已生成), 合成视频: \n"))
+
+    if arg == "5":
+        while filePath == "" :
+            filePath = input("拖入txt文档或复制油管链接(需包含字幕), 生成分镜稿 \n")
+            filePath = remove_quotes(filePath)
+            if filePath.startswith("http") or os.path.exists(filePath):
+                break
                 
                 
 
     content = ""
     folderPath = ""
-    if arg in ["1", "2", "3"]:
+    if arg in ["1", "2", "3", "5"]:
         if filePath.startswith("http"):
             videoLink = filePath
             content = getContentFromLink(videoLink)

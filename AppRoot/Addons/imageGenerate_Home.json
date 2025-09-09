@@ -2,12 +2,12 @@
   "BoxItems": [
     {
       "ImagePath": null,
-      "DisplayText": "一键全流程",
+      "DisplayText": "从稿子生成图片",
       "ContextMenu": "Home",
-      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py fullProcess",
+      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py 2",
       "AllowedExtensions": null,
       "FilePath": null,
-      "IsLarge": true
+      "IsLarge": false
     }
   ]
 }

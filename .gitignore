@@ -6,3 +6,7 @@ dist/
 config.json
 说明.txt
 venv/
+*.wav
+*.png
+*.mp4
+*.mp3

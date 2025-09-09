@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "图片风格prompt设置",
+      "ContextMenu": "Setting",
+      "Link": "${AppRoot}\\ShortsGen\\prompt_图片.txt",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": true
+    }
+  ]
+}

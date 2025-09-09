@@ -2,12 +2,12 @@
     "BoxItems":[
         {
             "ContextMenu":"Home",
-            "DisplayText":"",
+            "DisplayText":"请选择操作",
             "Link":"header"   
         },
         {
-            "ContextMenu":"Tools",
-            "DisplayText":"",
+            "ContextMenu":"Setting",
+            "DisplayText":"设置程序和生成prompts, 修改后需要先保存才会生效",
             "Link":"header",
             "AllowedExtensions" : ".rpp" 
         },

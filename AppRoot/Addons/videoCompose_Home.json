@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "用图片和语音合成视频",
+      "ContextMenu": "Home",
+      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py 0",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": true
+    }
+  ]
+}
