@@ -1,1 +1,1 @@
---language Chinese --speed 1.1 --voice Sweet_Girl_2 --volume 1.3
+--emotion neutral --language Chinese --speed 1.2 --voice Lovely_Girl

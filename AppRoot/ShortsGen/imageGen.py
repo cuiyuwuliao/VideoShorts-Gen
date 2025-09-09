@@ -16,7 +16,7 @@ else:
 
 
 class ImageGen:
-    model = "Gemini-2.5-Flash-Image"
+    model = ""
     systemPrompt = ""
     runLocal = False
     def __init__(self, url, key, runLocal = False):
@@ -50,7 +50,7 @@ class ImageGen:
             print("本地模型生成.....")
             try:
                 import txt2img
-                txt2img.generate_image(prompt, outputPath)
+                txt2img.generate_image(f"{self.systemPrompt}, {prompt}", outputPath)
                 print(f"Image saved as: {outputPath}")
             except Exception as e:
                 print(f"错误: {e}")
