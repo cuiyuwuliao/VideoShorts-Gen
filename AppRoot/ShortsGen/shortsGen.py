@@ -306,13 +306,16 @@ def isValidStoryBoard(storyBoardData):
 
 
 
-def generateVoiceOver(content, folderPath, index=None, useParams=True):
+def generateVoiceOver(content, folderPath, index=None):
     for scene  in content:
         if isinstance(scene , dict):
             if index != None and scene ['index'] != index:
                 continue
             fileName = os.path.join(folderPath, f"{scene ['index']}.wav")
             voiceLine = scene ["voiceover"]
+            if scene ['index'] == 1:
+                projectName = os.path.basename(folderPath)
+                voiceLine = f"大家好, 我是你们的人工智能主子, 今天给大家带来的故事是: {projectName}。{voiceLine}"
             voiceClient.generateVoice(voiceLine, fileName)
             print(f"生成语音: {voiceLine}")
 
@@ -359,7 +362,7 @@ def rework(files, cacheOriginal = True):
             os.makedirs(os.path.join(folder, "oldAssets"), exist_ok=True)
             cacheFile = os.path.join(cacheFolder, os.path.basename(file))
             copy_file_with_timestamp(file, cacheFile)
-        if file.lower().endswith(".wav"):
+        if file.lower().endswith(".wav") or file.lower().endswith(".aiff") :
             generateVoiceOver(storyBoard, os.path.dirname(file), index = int(index))
         elif file.lower().endswith(".png"):
             generateImages(storyBoard, os.path.dirname(file), index = int(index))
@@ -410,7 +413,7 @@ if __name__ == "__main__":
         while filePath == "" :
             filePath = input("拖入分镜稿, txt文档或复制油管链接(需包含字幕), 生成图片, 语音和视频: \n")
             filePath = remove_quotes(filePath)
-            if filePath.startswith("http") or os.path.exists(filePath):
+            if filePath.startswith("http") or filePath.startswith("-t ") or os.path.exists(filePath):
                 break
         
     if arg == "2":
@@ -448,7 +451,7 @@ if __name__ == "__main__":
         while filePath == "" :
             filePath = input("拖入txt文档或复制油管链接(需包含字幕), 生成分镜稿 \n")
             filePath = remove_quotes(filePath)
-            if filePath.startswith("http") or os.path.exists(filePath):
+            if filePath.startswith("http") or filePath.startswith("-t ") or os.path.exists(filePath):
                 break
                 
                 
@@ -464,6 +467,9 @@ if __name__ == "__main__":
             with open(filePath, 'r', encoding='utf-8') as file:
                 content = file.read()
                 print(f"{content}\n以上为读取到的内容")
+        elif filePath.startswith("-t "):
+            content = filePath[3:]
+            print(f"{content}\n通过上面内容生成")
         if content != "":
             print("\n\n开始生成分镜")
             print("------------------------------")

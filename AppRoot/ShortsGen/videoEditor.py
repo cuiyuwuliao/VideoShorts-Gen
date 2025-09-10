@@ -14,7 +14,7 @@ def findSources(folderPath):
     png_lost = []
     # Traverse the directory to find .wav files
     for file in os.listdir(folderPath):
-        if file.lower().endswith('.wav'):
+        if file.lower().endswith('.wav') or file.lower().endswith('.aiff') :
             wavFile = os.path.join(folderPath, file)
             wav_files.append(wavFile)
             pngFile = f"{os.path.splitext(wavFile)[0]}.png"
@@ -44,7 +44,7 @@ def findSources(folderPath):
             index += 1
     return png_files, wav_files
 
-def makeVideo(images, audios, folderPath, transitionTime = 0):
+def makeVideo(images, audios, folderPath, transitionTime = 0.5):
     clips = []  # Store video clips
     for image_path, audio_path in zip(images, audios):
         audio = AudioFileClip(audio_path)

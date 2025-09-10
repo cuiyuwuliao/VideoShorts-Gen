@@ -7,9 +7,6 @@ import requests
 import re
 
 
-
-
-
 currentDir = ""
 currentPath = ""
 if getattr(sys, 'frozen', False):
@@ -51,6 +48,15 @@ def generateVoice_local(prompt, outputPath):
     shutil.copy(result, outputPath)
     os.remove(result)
 
+import subprocess
+
+def macLocalTTS(text, outputPath):
+    try:
+        # Use the 'say' command to generate speech and save it as a WAV file
+        subprocess.run(['say', '-v', 'Tingting', "-r", "200", '-o', outputPath.replace(".wav", ".aiff"), text], check=True)
+        print(f"WAV audio file successfully created: {outputPath}")
+    except subprocess.CalledProcessError as e:
+        print(f"An error occurred while generating the WAV file: {e}")
 
 
 
@@ -87,7 +93,8 @@ class VoiceGen:
         else:
             print("本地模型生成.....")
             try:
-                generateVoice_local(prompt, outputPath)
+                # generateVoice_local(prompt, outputPath)
+                macLocalTTS(prompt, outputPath)
             except Exception as e:
                 print(f"错误: {e}")
                 print(f"语音生成失败: {prompt}\n返回结果{result}")   
