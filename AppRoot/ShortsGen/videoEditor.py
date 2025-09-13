@@ -5,6 +5,22 @@ import os
 import math
 from PIL import Image
 import numpy
+from moviepy.video.tools.subtitles import SubtitlesClip
+from moviepy.video.io.VideoFileClip import VideoFileClip
+from moviepy import TextClip
+import sys
+
+currentDir = ""
+fontFile = ""
+if getattr(sys, 'frozen', False):
+    currentDir = os.path.dirname(sys.executable)
+else:
+    currentDir = os.path.dirname(os.path.abspath(__file__))
+fontFile = os.path.join(currentDir, "Chinese.otf")
+if not os.path.exists(fontFile):
+    fontFile = ""
+
+
 
 def findSources(folderPath):
     if not os.path.isdir(folderPath):
@@ -44,7 +60,7 @@ def findSources(folderPath):
             index += 1
     return png_files, wav_files
 
-def makeVideo(images, audios, folderPath, transitionTime = 0.5):
+def makeVideo(images, audios, folderPath, transitionTime = 0.5, subtitile = True):
     clips = []  # Store video clips
     for image_path, audio_path in zip(images, audios):
         audio = AudioFileClip(audio_path)
@@ -62,6 +78,84 @@ def makeVideo(images, audios, folderPath, transitionTime = 0.5):
     else:
         filename = folderPath
     final_clip.write_videofile(filename, fps=10, codec='libx264', audio_codec='aac')
+    return filename
+
+
+# if render = False, return srt path, if True, return video path
+def autoSubtitle(videoPath, dynamic = True, readSrt = True, render = True):
+        import audioTranscribe
+        if not isinstance(videoPath,str) and os.path.exists(videoPath):
+            print("! 字幕添加失败: 无效视频或路径")
+            return videoPath
+        videoClip = VideoFileClip(videoPath)
+        srtPath = os.path.splitext(videoPath)[0]+".srt"
+        generator = lambda txt: TextClip(
+            fontFile,
+            txt,
+            font_size = videoClip.w/15,
+            color= 'yellow',
+            stroke_color="black",
+            stroke_width=5
+        )
+        subtitileTimestamps = []
+        if readSrt:
+            if not os.path.exists(srtPath):
+                print("! 视频同目录下没有找到srt字幕文件, 正在通过whisper生成....")
+                subtitileTimestamps = audioTranscribe.transcribe(videoPath)
+                audioTranscribe.writeSrt(subtitileTimestamps, srtPath)
+            else:
+                subtitileTimestamps = audioTranscribe.readSrt(srtPath)
+        else:
+            subtitileTimestamps = audioTranscribe.transcribe(videoPath)
+            audioTranscribe.writeSrt(subtitileTimestamps, srtPath)
+        if not render:
+            return srtPath
+        
+        if not dynamic:
+                sub = SubtitlesClip(srtPath, make_textclip=generator, encoding='utf-8').with_position(("center", videoClip.h/3))
+                videoClip = CompositeVideoClip.CompositeVideoClip([videoClip, sub])
+        else:
+            sameLineWords = []
+            textClips = []
+            for index, wordItem in enumerate(subtitileTimestamps):
+                if index in sameLineWords:
+                    continue
+                wordLine = []
+                lineIndex = index
+                lastWordEndTime = 0
+                lineLength = videoClip.w/10 #用于当前字的横轴起始点
+                while lineIndex < len(subtitileTimestamps):
+                    word = subtitileTimestamps[lineIndex]["word"]
+                    start = subtitileTimestamps[lineIndex]["start"]
+                    end = subtitileTimestamps[lineIndex]["end"]
+                    wordClip = generator(word)
+                    if (start - lastWordEndTime < 0.5 or lastWordEndTime == 0): #如果和上个字在0.5秒之内，加入同一行字幕
+                        if (lineLength + wordClip.w) < (videoClip.w - videoClip.w/10) or len(wordLine) == 0: #如果同一行放不下了，就不加入(除非第一个字就放不下)
+                            wordClip = wordClip.with_position((lineLength, videoClip.h * 0.75))
+                            wordClip.start = start
+                            sameLineWords.append(lineIndex)
+                            lineLength += wordClip.w
+                            lineIndex = lineIndex + 1
+                            wordLine.append({"wordClip":wordClip,"start":start, "end":end})
+                        else:
+                            lastWordEndTime = end
+                            break
+                    else:
+                        lastWordEndTime = end
+                        break
+                    lastWordEndTime = end
+                lastWordEndTime = wordLine[-1]["end"]
+                for item in wordLine:#每个字设置持续时间 = 所属行最后一个字念完的时间 - 该字的起始时间
+                    duration = lastWordEndTime - item["start"]
+                    textClips.append(item["wordClip"].with_duration(duration))
+                wordLine = []
+            videoClip = CompositeVideoClip.CompositeVideoClip([videoClip] + textClips)
+
+        outputPath = f"{os.path.splitext(videoPath)[0]}_caption.mp4"
+        videoClip.write_videofile(outputPath, fps=videoClip.fps, codec='libx264', audio_codec='aac')
+        return outputPath
+
+
 
 
 def zoom_in_effect(clip, zoom_ratio=0.04):
@@ -93,3 +187,11 @@ def zoom_in_effect(clip, zoom_ratio=0.04):
         return result
 
     return clip.transform(effect)
+
+
+if __name__ =="__main__":
+    path = input("file: ")
+    # path = "/Users/yu/Desktop/ShortsGen/results/地球表面积比例趣味误解/地球表面积比例趣味误解.mp4"
+    # images, audios = findSources(path)
+    # makeVideo(images, audios, path)
+    autoSubtitle(path, readSrt=False)

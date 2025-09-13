@@ -39,6 +39,7 @@ tifffile==2024.8.30
 tiktoken==0.11.0
 urllib3==2.5.0
 youtube-transcript-api==1.2.2
-gradio_client==1.12.1
+gradio_client
 moviepy==2.2.1
 openai-whisper
+pypinyin

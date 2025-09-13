@@ -224,7 +224,7 @@ def generateStoryBoard(content, outputPath = None):
                     for sence in result_ls:
                         voiceLine = sence["voiceover"]
                         story += voiceLine
-                    name = sendPrompt(f"{story}\n为这个视频稿取一个15字以内, 不含特殊符号的名字")
+                    name = sendPrompt(f"{story}\n为这个视频稿取一个15字以内, 不含特殊符号和空格的名字")
                     os.makedirs(os.path.join(outputPath, name), exist_ok=True)
                     outputPath = os.path.join(outputPath, name, f"{name}.json")
                 with open(outputPath, 'w', encoding='utf-8') as file:
@@ -247,6 +247,9 @@ def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPromp
     systemPrompt += formatInstruction
     try:
         model = configData["LLM_model"]
+        print(f"systemPrompt: {systemPrompt}")
+        print(f"userPrompt: {userPrompt}")
+        print("####AI请求开始####")
         completion = client.chat.completions.create(
             model=model,
             max_tokens=configData["LLM_maxToken"],
@@ -262,9 +265,6 @@ def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPromp
             ]
         )        
         result = completion.choices[0].message.content
-        print("####AI请求开始####")
-        print(f"systemPrompt: {systemPrompt}")
-        print(f"userPrompt: {userPrompt}")
         print("####AI请求结束####")
         print(f"结果:\n{result}")
         result = extract_json_content_regex(result)
@@ -352,7 +352,7 @@ def rework(files, cacheOriginal = True):
                 print(f"! 发现一个无效的分镜文件: {jsonfile}")
         if storyBoard != "":
             break
-
+    story = '\n'.join(item['voiceover'] for item in storyBoard)
     for file in files:
         index = os.path.basename(file)
         index, ext = os.path.splitext(index)
@@ -366,6 +366,22 @@ def rework(files, cacheOriginal = True):
             generateVoiceOver(storyBoard, os.path.dirname(file), index = int(index))
         elif file.lower().endswith(".png"):
             generateImages(storyBoard, os.path.dirname(file), index = int(index))
+        elif file.lower().endswith(".srt"):
+            from audioTranscribe import readSrt
+            from audioTranscribe import writeSrt
+            srtContent = readSrt(file)
+            wordContent = [item['word'] for item in srtContent]
+            userPrompt = json.dumps(wordContent, ensure_ascii=False)
+            userPrompt += f"\n参考下面原文替换上面list中错误汉字, 保持len(list)长度完全不变, 不要修改汉字以外的任何东西, 返回一个长度为{len(srtContent)}的list\n"
+            userPrompt += story
+            systemPrompt = "\n你需要返回一个json格式的list, 以及list的长度\n"
+            newWordContent = sendPrompt(userPrompt, systemPrompt, modifyJson=True)
+            if len(newWordContent) != len(wordContent):
+                input(f"! AI修正srt字幕数量不匹配, 期望:{len(wordContent)}, 得到:{len(newWordContent)}\n按回车重新生成")
+            for i, wordItem in enumerate(srtContent):
+                srtContent[i]["word"] = newWordContent[i]
+            writeSrt(srtContent, file)
+
         elif file == storyFile:
             newStoryBoard = []
             additionalPrompt = input("请输入分镜的修改要求: ")
@@ -392,6 +408,8 @@ def remove_quotes(s):
 
 
 
+
+
 if __name__ == "__main__":
     init()
     print()
@@ -402,7 +420,7 @@ if __name__ == "__main__":
         arg = sys.argv[1]
         if len(sys.argv) > 2:
             filePath = sys.argv[2]
-    choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4", "StoryBoard": "5"}
+    choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4", "StoryBoard": "5", "caption": "6"}
     while arg not in choices.values():
         print("操作列表")
         for key, value in choices.items():
@@ -453,11 +471,14 @@ if __name__ == "__main__":
             filePath = remove_quotes(filePath)
             if filePath.startswith("http") or filePath.startswith("-t ") or os.path.exists(filePath):
                 break
-                
-                
+    if arg == "6":
+        while filePath == "" or not os.path.exists(filePath):
+            filePath = input("拖入要添加字幕的视频(优先使用同目录的同名srt文件,没有时自动生成)\n")
+            filePath = remove_quotes(filePath)
 
     content = ""
     folderPath = ""
+    videoPath = ""
     if arg in ["1", "2", "3", "5"]:
         if filePath.startswith("http"):
             videoLink = filePath
@@ -508,9 +529,27 @@ if __name__ == "__main__":
         if not os.path.isdir(folderPath):
             folderPath = os.path.dirname(folderPath)
         images, voices = videoEditor.findSources(folderPath)
-        videoEditor.makeVideo(images, voices, folderPath)
+        videoPath = videoEditor.makeVideo(images, voices, folderPath)
         print("------------------------------")
         print("视频合成完毕")
+
+    if arg in ["0", "1", "6"]:
+        if arg != "6":
+            print("提示: 视频生成完毕, 正在生成字幕版视频, 若不需要可以直接关闭")
+        else:
+            videoPath = filePath
+        print("\n\n开始添加字幕")
+        print("------------------------------")
+        srtFile = videoEditor.autoSubtitle(videoPath, render=False)
+        print(f"字幕生成到了: {srtFile}")
+        try:
+            print("尝试使用llm对字幕进行校对...")
+            rework(srtFile)
+        except Exception as e:
+            input("字幕校对失败, 若视频较长(3分钟以上)需使用更强的模型\n按回车添加无校对的字幕")
+        videoEditor.autoSubtitle(videoPath, render=True, readSrt=True)
+        print("------------------------------")
+        print("字幕添加完毕")
     
     input("\n@(^_^)@运行结束, 可以关闭咯!")
 
