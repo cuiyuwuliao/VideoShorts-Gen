@@ -320,7 +320,7 @@ def generateVoiceOver(content, folderPath, index=None):
             print(f"生成语音: {voiceLine}")
 
 def generateImages(content, folderPath, index=None):
-    for scene  in content:
+    for scene in content:
         if isinstance(scene , dict):
             if index != None and scene ['index'] != index:
                 continue

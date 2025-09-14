@@ -1,1 +1,1 @@
---language Chinese --speed 1.2 --voice Deep_Voice_Man
+--language Chinese --speed 1.2 --voice Lively_Girl
