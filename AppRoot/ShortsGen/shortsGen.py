@@ -367,21 +367,23 @@ def rework(files, cacheOriginal = True):
         elif file.lower().endswith(".png"):
             generateImages(storyBoard, os.path.dirname(file), index = int(index))
         elif file.lower().endswith(".srt"):
-            from audioTranscribe import readSrt
-            from audioTranscribe import writeSrt
-            srtContent = readSrt(file)
-            wordContent = [item['word'] for item in srtContent]
-            userPrompt = json.dumps(wordContent, ensure_ascii=False)
-            userPrompt += f"\n参考下面原文替换上面list中错误汉字, 保持len(list)长度完全不变, 不要修改汉字以外的任何东西, 返回一个长度为{len(srtContent)}的list\n"
-            userPrompt += story
-            systemPrompt = "\n你需要返回一个json格式的list, 以及list的长度\n"
-            newWordContent = sendPrompt(userPrompt, systemPrompt, modifyJson=True)
-            if len(newWordContent) != len(wordContent):
-                input(f"! AI修正srt字幕数量不匹配, 期望:{len(wordContent)}, 得到:{len(newWordContent)}\n按回车重新生成")
-            for i, wordItem in enumerate(srtContent):
-                srtContent[i]["word"] = newWordContent[i]
-            writeSrt(srtContent, file)
-
+            ## 通过AI修改，但是字幕太长时会不准, 所以弃用
+            # from audioTranscribe import readSrt
+            # from audioTranscribe import writeSrt
+            # srtContent = readSrt(file)
+            # wordContent = [item['word'] for item in srtContent]
+            # userPrompt = json.dumps(wordContent, ensure_ascii=False)
+            # userPrompt += f"\n参考下面原文替换上面list中错误汉字, 保持len(list)长度完全不变, 不要修改汉字以外的任何东西, 返回一个长度为{len(srtContent)}的list\n"
+            # userPrompt += story
+            # systemPrompt = "\n你需要返回一个json格式的list, 以及list的长度\n"
+            # newWordContent = sendPrompt(userPrompt, systemPrompt, modifyJson=True)
+            # if len(newWordContent) != len(wordContent):
+            #     input(f"! AI修正srt字幕数量不匹配, 期望:{len(wordContent)}, 得到:{len(newWordContent)}\n按回车重新生成")
+            # for i, wordItem in enumerate(srtContent):
+            #     srtContent[i]["word"] = newWordContent[i]
+            # writeSrt(srtContent, file)
+            from audioTranscribe import fixTranscription
+            srtContent = fixTranscription(file, story)
         elif file == storyFile:
             newStoryBoard = []
             additionalPrompt = input("请输入分镜的修改要求: ")
@@ -542,11 +544,12 @@ if __name__ == "__main__":
         print("------------------------------")
         srtFile = videoEditor.autoSubtitle(videoPath, render=False)
         print(f"字幕生成到了: {srtFile}")
+        print("正在尝试用原始文本校对字幕:")
         try:
-            print("尝试使用llm对字幕进行校对...")
             rework(srtFile)
         except Exception as e:
-            input("字幕校对失败, 若视频较长(3分钟以上)需使用更强的模型\n按回车添加无校对的字幕")
+            print(f"错误:{e}\n\n字幕校对失败: 请检查分镜稿是否存在且合法")
+        print("正在给视频添加字幕")
         videoEditor.autoSubtitle(videoPath, render=True, readSrt=True)
         print("------------------------------")
         print("字幕添加完毕")
