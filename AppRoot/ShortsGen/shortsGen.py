@@ -413,147 +413,149 @@ def remove_quotes(s):
 
 
 if __name__ == "__main__":
-    init()
-    print()
-    arg = None
-    filePath = ""
-    fileList = []
-    if len(sys.argv) > 1:
-        arg = sys.argv[1]
-        if len(sys.argv) > 2:
-            filePath = sys.argv[2]
-    choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4", "StoryBoard": "5", "caption": "6"}
-    while arg not in choices.values():
-        print("操作列表")
-        for key, value in choices.items():
-            print(f"{value}: {key}")
-        arg = remove_quotes(input("请输入操作序号: "))
+    try:
+        init()
+        print()
+        arg = None
+        filePath = ""
+        fileList = []
+        if len(sys.argv) > 1:
+            arg = sys.argv[1]
+            if len(sys.argv) > 2:
+                filePath = sys.argv[2]
+        choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4", "StoryBoard": "5", "caption": "6"}
+        while arg not in choices.values():
+            print("操作列表")
+            for key, value in choices.items():
+                print(f"{value}: {key}")
+            arg = remove_quotes(input("请输入操作序号: "))
 
-    if arg == "1":
-        while filePath == "" :
-            filePath = input("拖入分镜稿, txt文档或复制油管链接(需包含字幕), 生成图片, 语音和视频: \n")
-            filePath = remove_quotes(filePath)
-            if filePath.startswith("http") or filePath.startswith("-t ") or os.path.exists(filePath):
-                break
-        
-    if arg == "2":
-        while filePath == "" or not os.path.exists(filePath):
-            filePath = remove_quotes(input("拖入分镜稿, 仅生成图片: \n"))
-            
-
-    if arg == "3":
-        while filePath == "" or not os.path.exists(filePath):
-            filePath = remove_quotes(input("拖入分镜稿, 仅生成语音: \n"))
-
-    if arg == "4":
-        while len(fileList) == 0:
-            filePath = input("拖入需要重新生成的文件(分镜稿, 图片或语音): \n")
-            fileList_unchecked = filePath.split(" ")
-            hasStoryBoard = False
-            for file in fileList_unchecked:
-                file = remove_quotes(file)
-                if file.endswith(".json"):
-                    hasStoryBoard = True
-                if not os.path.exists(file):
-                    print(f"文件不合规: {file}")
-                    fileList = []
+        if arg == "1":
+            while filePath == "" :
+                filePath = input("拖入分镜稿, txt文档或复制油管链接(需包含字幕), 生成图片, 语音和视频: \n")
+                filePath = remove_quotes(filePath)
+                if filePath.startswith("http") or filePath.startswith("-t ") or os.path.exists(filePath):
                     break
-                fileList.append(file)
-            if len(fileList) > 1 and hasStoryBoard:
-                print("! 分镜稿仅支持单独处理, 你可以先修改分镜稿再通过分镜稿生成图片和音频\n")
-                fileList = []
+            
+        if arg == "2":
+            while filePath == "" or not os.path.exists(filePath):
+                filePath = remove_quotes(input("拖入分镜稿, 仅生成图片: \n"))
+                
 
-    if arg == "0":
-        while filePath == "" or not os.path.exists(filePath):
-            filePath = remove_quotes(input("拖入分镜稿或项目文件夹(请先确保图片和语音已生成), 合成视频: \n"))
+        if arg == "3":
+            while filePath == "" or not os.path.exists(filePath):
+                filePath = remove_quotes(input("拖入分镜稿, 仅生成语音: \n"))
 
-    if arg == "5":
-        while filePath == "" :
-            filePath = input("拖入txt文档或复制油管链接(需包含字幕), 生成分镜稿 \n")
-            filePath = remove_quotes(filePath)
-            if filePath.startswith("http") or filePath.startswith("-t ") or os.path.exists(filePath):
-                break
-    if arg == "6":
-        while filePath == "" or not os.path.exists(filePath):
-            filePath = input("拖入要添加字幕的视频(优先使用同目录的同名srt文件,没有时自动生成)\n")
-            filePath = remove_quotes(filePath)
+        if arg == "4":
+            while len(fileList) == 0:
+                filePath = input("拖入需要重新生成的文件(分镜稿, 图片或语音): \n")
+                fileList_unchecked = filePath.split(" ")
+                hasStoryBoard = False
+                for file in fileList_unchecked:
+                    file = remove_quotes(file)
+                    if file.endswith(".json"):
+                        hasStoryBoard = True
+                    if not os.path.exists(file):
+                        print(f"文件不合规: {file}")
+                        fileList = []
+                        break
+                    fileList.append(file)
+                if len(fileList) > 1 and hasStoryBoard:
+                    print("! 分镜稿仅支持单独处理, 你可以先修改分镜稿再通过分镜稿生成图片和音频\n")
+                    fileList = []
 
-    content = ""
-    folderPath = ""
-    videoPath = ""
-    if arg in ["1", "2", "3", "5"]:
-        if filePath.startswith("http"):
-            videoLink = filePath
-            content = getContentFromLink(videoLink)
-            print(f"{content}\n以上为提取到的内容")
-        elif filePath.endswith(".txt"): 
-            with open(filePath, 'r', encoding='utf-8') as file:
-                content = file.read()
-                print(f"{content}\n以上为读取到的内容")
-        elif filePath.startswith("-t "):
-            content = filePath[3:]
-            print(f"{content}\n通过上面内容生成")
-        if content != "":
-            print("\n\n开始生成分镜")
+        if arg == "0":
+            while filePath == "" or not os.path.exists(filePath):
+                filePath = remove_quotes(input("拖入分镜稿或项目文件夹(请先确保图片和语音已生成), 合成视频: \n"))
+
+        if arg == "5":
+            while filePath == "" :
+                filePath = input("拖入txt文档或复制油管链接(需包含字幕), 生成分镜稿 \n")
+                filePath = remove_quotes(filePath)
+                if filePath.startswith("http") or filePath.startswith("-t ") or os.path.exists(filePath):
+                    break
+        if arg == "6":
+            while filePath == "" or not os.path.exists(filePath):
+                filePath = input("拖入要添加字幕的视频(优先使用同目录的同名srt文件,没有时自动生成)\n")
+                filePath = remove_quotes(filePath)
+
+        content = ""
+        folderPath = ""
+        videoPath = ""
+        if arg in ["1", "2", "3", "5"]:
+            if filePath.startswith("http"):
+                videoLink = filePath
+                content = getContentFromLink(videoLink)
+                print(f"{content}\n以上为提取到的内容")
+            elif filePath.endswith(".txt"): 
+                with open(filePath, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    print(f"{content}\n以上为读取到的内容")
+            elif filePath.startswith("-t "):
+                content = filePath[3:]
+                print(f"{content}\n通过上面内容生成")
+            if content != "":
+                print("\n\n开始生成分镜")
+                print("------------------------------")
+                storyBoard, storyPath = generateStoryBoard(content, outputPath=outputPath_storyBoard)
+                folderPath = os.path.dirname(storyPath)
+                print("------------------------------")
+                print("分镜生成完毕")
+
+            else:#直接给的分镜文件，读分镜
+                print("正在读取分镜文件...")
+                storyBoard = readStoryBoard(filePath)
+                folderPath = os.path.dirname(filePath)
+
+        if arg in ["1", "2"]:
+            print("\n\n开始生成图片")
             print("------------------------------")
-            storyBoard, storyPath = generateStoryBoard(content, outputPath=outputPath_storyBoard)
-            folderPath = os.path.dirname(storyPath)
+            generateImages(storyBoard, folderPath)
             print("------------------------------")
-            print("分镜生成完毕")
+            print("图片生成完毕")
 
-        else:#直接给的分镜文件，读分镜
-            print("正在读取分镜文件...")
-            storyBoard = readStoryBoard(filePath)
-            folderPath = os.path.dirname(filePath)
+        if arg in ["1", "3"]:   
+            print("\n\n开始生成语音")
+            print("------------------------------")
+            generateVoiceOver(storyBoard, folderPath)
+            print("------------------------------")
+            print("语音生成完毕")
 
-    if arg in ["1", "2"]:
-        print("\n\n开始生成图片")
-        print("------------------------------")
-        generateImages(storyBoard, folderPath)
-        print("------------------------------")
-        print("图片生成完毕")
+        if arg in ["4"]:
+            rework(fileList)
 
-    if arg in ["1", "3"]:   
-        print("\n\n开始生成语音")
-        print("------------------------------")
-        generateVoiceOver(storyBoard, folderPath)
-        print("------------------------------")
-        print("语音生成完毕")
+        if arg in ["0", "1"]:
+            print("\n\n开始合成视频")
+            print("------------------------------")
+            if folderPath == "": 
+                folderPath = filePath
+            if not os.path.isdir(folderPath):
+                folderPath = os.path.dirname(folderPath)
+            images, voices = videoEditor.findSources(folderPath)
+            videoPath = videoEditor.makeVideo(images, voices, folderPath)
+            print("------------------------------")
+            print("视频合成完毕")
 
-    if arg in ["4"]:
-        rework(fileList)
-
-    if arg in ["0", "1"]:
-        print("\n\n开始合成视频")
-        print("------------------------------")
-        if folderPath == "": 
-            folderPath = filePath
-        if not os.path.isdir(folderPath):
-            folderPath = os.path.dirname(folderPath)
-        images, voices = videoEditor.findSources(folderPath)
-        videoPath = videoEditor.makeVideo(images, voices, folderPath)
-        print("------------------------------")
-        print("视频合成完毕")
-
-    if arg in ["0", "1", "6"]:
-        if arg != "6":
-            print("提示: 视频生成完毕, 正在生成字幕版视频, 若不需要可以直接关闭")
-        else:
-            videoPath = filePath
-        print("\n\n开始添加字幕")
-        print("------------------------------")
-        srtFile = videoEditor.autoSubtitle(videoPath, render=False)
-        print(f"字幕生成到了: {srtFile}")
-        print("正在尝试用原始文本校对字幕:")
-        try:
-            rework(srtFile)
-        except Exception as e:
-            print(f"错误:{e}\n\n字幕校对失败: 请检查分镜稿是否存在且合法")
-        print("正在给视频添加字幕")
-        videoEditor.autoSubtitle(videoPath, render=True, readSrt=True)
-        print("------------------------------")
-        print("字幕添加完毕")
-    
-    input("\n@(^_^)@运行结束, 可以关闭咯!")
-
-
+        if arg in ["0", "1", "6"]:
+            if arg != "6":
+                print("提示: 视频生成完毕, 正在生成字幕版视频, 若不需要可以直接关闭")
+            else:
+                videoPath = filePath
+            print("\n\n开始添加字幕")
+            print("------------------------------")
+            srtFile = videoEditor.autoSubtitle(videoPath, render=False)
+            print(f"字幕生成到了: {srtFile}")
+            print("正在尝试用原始文本校对字幕:")
+            try:
+                rework(srtFile)
+            except Exception as e:
+                print(f"错误:{e}\n\n字幕校对失败: 请检查分镜稿是否存在且合法")
+            print("正在给视频添加字幕")
+            videoEditor.autoSubtitle(videoPath, render=True, readSrt=True)
+            print("------------------------------")
+            print("字幕添加完毕")
+        
+        input("\n@(^_^)@运行结束, 可以关闭咯!")
+    except Exception as e:
+        print(f"!_错误: {e}!_")
+        input("\n请按回车键退出")
