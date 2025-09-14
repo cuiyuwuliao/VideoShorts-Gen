@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "加字幕",
+      "ContextMenu": "Home",
+      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py 6",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": false
+    }
+  ]
+}
