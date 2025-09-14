@@ -2,12 +2,12 @@
   "BoxItems": [
     {
       "ImagePath": null,
-      "DisplayText": "分镜prompt设置",
+      "DisplayText": "git_pull.bat",
       "ContextMenu": "Setting",
-      "Link": "${AppRoot}\\ShortsGen\\prompt_分镜.txt",
+      "Link": "C:\\Users\\81996\\Desktop\\moon\\AI\u89C6\u9891\u751F\u6210\\git_pull.bat",
       "AllowedExtensions": null,
       "FilePath": null,
-      "IsLarge": false
+      "IsLarge": null
     }
   ]
 }
