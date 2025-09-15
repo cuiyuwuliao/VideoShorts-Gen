@@ -32,7 +32,7 @@ else:
 defaultConfigData = {
     "LLM_key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
     "LLM_model": "GPT-5",
-    "LLM_url": "https://api.chatanywhere.tech/v1", 
+    "LLM_url": "https://api.poe.com/v1", 
     "LLM_maxToken": 5000,
     "Img_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
     "Img_url": "https://api.poe.com/v1",
