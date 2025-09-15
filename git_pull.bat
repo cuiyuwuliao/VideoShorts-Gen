@@ -23,7 +23,7 @@ if errorlevel 1 (
 )
 
 echo Pulling latest changes from remote...
-git pull origin main
+git pull origin main --strategy-option theirs
 
 echo.
 echo ========================================
