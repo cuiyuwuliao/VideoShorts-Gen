@@ -30,14 +30,14 @@ else:
 
 
 defaultConfigData = {
-    "LLM_key": "sk-WpCb6vXleVk6djvQICFygFTzv3B7GFvCEIN9YSV1C9ydNKW5",
-    "LLM_model": "gpt-4o-mini",
+    "LLM_key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
+    "LLM_model": "GPT-5",
     "LLM_url": "https://api.chatanywhere.tech/v1", 
     "LLM_maxToken": 5000,
     "Img_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
     "Img_url": "https://api.poe.com/v1",
     "Img_model": "Gemini-2.5-Flash-Image",
-    "Img_runLocal": False,
+    "Img_runLocal": True,
     "Voice_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
     "Voice_url": "https://api.poe.com/v1",
     "Voice_model": "Hailuo-Speech-02",
@@ -319,6 +319,8 @@ def generateVoiceOver(content, folderPath, index=None):
                 intro = configData.get("Voice_intro", None)
                 if intro != None:
                     intro = intro.replace("$projectName", projectName)
+                else:
+                    intro = None
                 
                 voiceLine = f"{intro}。{voiceLine}"
             voiceClient.generateVoice(voiceLine, fileName)
