@@ -42,6 +42,7 @@ defaultConfigData = {
     "Voice_url": "https://api.poe.com/v1",
     "Voice_model": "Hailuo-Speech-02",
     "Voice_runLocal": False,
+    "Voice_intro": "",
     "custom_storyPath": None
 }
 
@@ -315,7 +316,11 @@ def generateVoiceOver(content, folderPath, index=None):
             voiceLine = scene ["voiceover"]
             if scene ['index'] == 1:
                 projectName = os.path.basename(folderPath)
-                voiceLine = f"大家好, 我是你们的人工智能主子, 今天给大家带来的故事是: {projectName}。{voiceLine}"
+                intro = configData.get("Voice_intro", None)
+                if intro != None:
+                    intro = intro.replace("$projectName", projectName)
+                
+                voiceLine = f"{intro}。{voiceLine}"
             voiceClient.generateVoice(voiceLine, fileName)
             print(f"生成语音: {voiceLine}")
 

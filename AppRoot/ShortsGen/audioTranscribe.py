@@ -203,9 +203,9 @@ def fixTranscription(srtContent, string):
                     cache = ""
                     cache_r = ""
                     break
-        if len(cache_bestMatch) > 10:
+        if len(cache_bestMatch) > 5 or len(cache_bestMatch_r) >5:
             skip = len(cache_bestMatch) - 1
-            correction += cache_bestMatch
+            correction += cache_bestMatch_r
             if lastLargeChunk_w != "":
                 # 两个相同的大块之间的字数完全匹配，那就把这些字强制修正
                 gap_w = substring_distance(exText_wrong,lastLargeChunk_w, cache_bestMatch, getString=True) 
