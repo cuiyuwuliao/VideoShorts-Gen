@@ -28,11 +28,11 @@ else:
 
 
 defaultConfigData = {
-    "LLM_key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
+    "LLM_key": "Your POE.com API KEY",
     "LLM_model": "GPT-5",
     "LLM_url": "https://api.poe.com/v1", 
     "LLM_maxToken": 5000,
-    "Img_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
+    "Img_Key": "Your POE.com API KEY",
     "Img_url": "https://api.poe.com/v1",
     "Img_model": "Gemini-2.5-Flash-Image",
     "Img_stylePrompt": "In the style of simple pencil drawings",
@@ -43,7 +43,7 @@ defaultConfigData = {
     "Img_local_height": 1024,
     "Img_local_random": True,
     "Img_runLocal": True,
-    "Voice_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
+    "Voice_Key": "Your POE.com API KEY",
     "Voice_url": "https://api.poe.com/v1",
     "Voice_model": "Hailuo-Speech-02",
     "Voice_stylePrompt": "--language Chinese --speed 1.2 --voice Lively_Girl",
