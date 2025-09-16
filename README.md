@@ -1,6 +1,6 @@
 
 使用说明
-1. 第一次运行时, 运行Setup.bat
+1. 第一次运行时, 运行setup.bat
 2. 运行AppRoot\ShortsGen.exe
 3. 第一次运行时, 先点击一下Home页面的任意功能按钮, 会自动生成样本配置(config.json)，之后可以在"ShortsGen.exe->setting->API和模型相关设置"中进行配置
 4. 在"ShortsGen.exe->setting->API和模型相关设置" 中配置模型，根据样本的数据形和下面的"配置解释"来进行配置
