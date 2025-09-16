@@ -7,6 +7,7 @@ import requests
 import re
 
 
+
 currentDir = ""
 currentPath = ""
 if getattr(sys, 'frozen', False):
@@ -58,12 +59,19 @@ def macLocalTTS(text, outputPath):
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while generating the WAV file: {e}")
 
+def windowsLocalTTS(text, outputPath):
+    import pyttsx3
+    windowsEngine = pyttsx3.init()
+    windowsEngine.save_to_file(text, outputPath)
+    windowsEngine.runAndWait()
+    del windowsEngine
 
 
 class VoiceGen:
     model = "Hailuo-Speech-02"
     runLocal = False
     voiceParams = ""
+    windowsEngine = None
     def __init__(self, url, key, runLocal = False):
         if runLocal:
             self.runLocal = runLocal
@@ -93,8 +101,14 @@ class VoiceGen:
         else:
             print("本地模型生成.....")
             try:
-                # generateVoice_local(prompt, outputPath)
-                macLocalTTS(prompt, outputPath)
+                if os.name == "nt":#windows系统
+                    windowsLocalTTS(prompt, outputPath)
+                else:
+                    macLocalTTS(prompt, outputPath)
             except Exception as e:
                 print(f"错误: {e}")
                 print(f"语音生成失败: {prompt}\n返回结果{result}")   
+
+
+if __name__ == "__main__":
+    1

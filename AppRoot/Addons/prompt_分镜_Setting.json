@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "分镜prompt设置",
+      "ContextMenu": "Setting",
+      "Link": "${AppRoot}\\ShortsGen\\prompt_\u5206\u955C.txt",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": null
+    }
+  ]
+}

@@ -43,3 +43,4 @@ gradio_client
 moviepy==2.2.1
 openai-whisper
 pypinyin
+pyttsx3
