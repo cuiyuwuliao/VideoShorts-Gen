@@ -1,0 +1,87 @@
+[
+  {
+    "index": 1,
+    "voiceover": "开场介绍：大家好，我是小声，专注音频与数字信号处理的讲解者。今天我们来系统、清晰地解释“副瓣”（sidelobes）到底是什么、为什么会出现、会带来哪些影响，以及如何减小它们。",
+    "image": "clean studio desk with microphone, audio interface, headphones, oscilloscope and laptop showing waveform plots, soft neutral lighting, educational tech setup, cinematic composition"
+  },
+  {
+    "index": 2,
+    "voiceover": "先给出简要定义。副瓣是指在频谱或相关函数中，除了主峰（主瓣）之外出现在两侧的较小峰值。主瓣代表信号的主要能量或主频信息，而副瓣是由分析过程中的有限时域截断、窗函数选择、或滤波器有限阶数等因素引入的次级能量泄漏。",
+    "image": "graph visualization: a central tall main lobe peak with smaller side peaks gradually decreasing on both sides, labeled mentally as main lobe center and sidelobes on sides, clean white background, minimalistic data art, no text"
+  },
+  {
+    "index": 3,
+    "voiceover": "引出场景：在音频处理中，我们经常用离散傅里叶变换（DFT）或快速傅里叶变换（FFT）来观察频谱。由于我们只能截取有限长度的时域片段，相当于对无限长信号施加了一个“窗”。这个截断动作在频域上会带来卷积效应，从而产生副瓣。",
+    "image": "conceptual diagram: time-domain signal multiplied by a rectangular window, arrow to frequency-domain result showing convolution and sidelobes, clear icons, high-contrast infographic style, no text"
+  },
+  {
+    "index": 4,
+    "voiceover": "用一个直观比喻。把真实信号想象成一束白光，理想情况下通过狭缝后应成一条清晰光带；但狭缝有限宽度会导致光的衍射出现旁瓣。同理，有限时域截断会导致频域能量从主频向两侧“泄漏”，这就是副瓣。",
+    "image": "physics-inspired analogy: a slit diffraction pattern with bright central maximum and diminishing side maxima on a dark background, cinematic macro shot, educational visualization"
+  },
+  {
+    "index": 5,
+    "voiceover": "从数学角度看，当使用矩形窗截断时域信号，其频谱等于原始频谱与sinc形状的频率响应卷积。sinc函数具有明显的主瓣与逐级衰减的副瓣，因此卷积结果也会出现副瓣结构。",
+    "image": "mathematical visualization: sinc function magnitude plot with dominant main lobe and oscillating sidelobes fading out, clean grid, scientific style, no equations, clear shapes"
+  },
+  {
+    "index": 6,
+    "voiceover": "副瓣带来的第一个问题是“谱泄漏”。当信号频率不正好落在频谱分析的频率格点上，能量会分散到附近频点，副瓣越高，泄漏越严重，导致弱小成分被附近强信号的副瓣所淹没。",
+    "image": "frequency spectrum plot showing a strong tone spreading energy across nearby bins with small ripples on both sides, highlighting leakage visually, dark theme, glow lines, no text"
+  },
+  {
+    "index": 7,
+    "voiceover": "第二个问题是动态范围受限。副瓣形成的基底噪声会抬高频谱底噪，削弱我们区分强弱分量的能力，进而影响谐波检测、共振峰识别、以及噪声分析的准确度。",
+    "image": "spectrum with elevated noise floor and small peaks buried near sidelobe ripples, professional audio analysis look, subtle color palette"
+  },
+  {
+    "index": 8,
+    "voiceover": "第三个问题是频率估计偏差。副瓣会让峰值形状变宽或不对称，配合有限分辨率，导致峰值定位偏移。尤其在邻近频率成分较近时，副瓣相互叠加会使峰分不清。",
+    "image": "two close spectral peaks partially merging due to ripples around them, showing ambiguous separation, high-resolution graph aesthetic"
+  },
+  {
+    "index": 9,
+    "voiceover": "为了控制副瓣，我们常用“窗函数”。窗函数是在截取数据时对样本加权，改变频率响应形状。常见窗包括矩形窗、汉宁窗（Hanning/Hann）、汉明窗（Hamming）、布莱克曼窗（Blackman）、凯泽窗（Kaiser）等。",
+    "image": "panel of multiple window shapes in time domain (rectangular, Hann, Hamming, Blackman, Kaiser) drawn as smooth curves, clean comparison layout, no labels"
+  },
+  {
+    "index": 10,
+    "voiceover": "不同窗函数在主瓣宽度与副瓣高度之间存在权衡：降低副瓣通常会扩大主瓣。也就是说，副瓣低了，频谱泄漏变小，但频率分辨率也稍差。选择哪种窗取决于任务侧重点。",
+    "image": "trade-off illustration: two frequency responses overlayed—one with narrow main lobe high sidelobes, another with wider main lobe low sidelobes—sleek transparent curves on dark background"
+  },
+  {
+    "index": 11,
+    "voiceover": "举例说明：矩形窗主瓣最窄，但副瓣最高，泄漏明显；汉宁窗副瓣显著更低但主瓣更宽；布莱克曼窗副瓣更低，代价是主瓣更宽；凯泽窗通过参数β可在副瓣与主瓣宽度之间连续调节。",
+    "image": "four frequency response magnitude curves side by side: rectangular (narrow main lobe, high sidelobes), Hann (wider, lower sidelobes), Blackman (widest, very low sidelobes), Kaiser (adjustable family), polished scientific visualization"
+  },
+  {
+    "index": 12,
+    "voiceover": "在实际音频分析中，如果要检测强信号旁边的弱信号，优先选择副瓣低的窗，比如布莱克曼或较大β值的凯泽窗；如果要精确区分接近的两个频率，则倾向主瓣较窄的窗，比如矩形窗或汉宁窗，但要注意泄漏影响。",
+    "image": "application scenario split screen: left shows detecting a tiny peak near a big tone using low-sidelobe window, right shows resolving two close tones using narrow-main-lobe window, modern UI aesthetics"
+  },
+  {
+    "index": 13,
+    "voiceover": "除了窗函数，零填充（zero padding）可以细化频谱采样点，帮助更平滑地观察峰形，但要注意：零填充不会降低副瓣高度，只是提高频谱的插值密度，便于读数与插值估计。",
+    "image": "illustration of original short time segment padded with zeros to a longer array, arrow to denser frequency spectrum sampling, crisp infographic style"
+  },
+  {
+    "index": 14,
+    "voiceover": "如果你在设计数字滤波器，有限脉冲响应（FIR）滤波器的频率响应同样存在副瓣。通过选择窗法设计（如凯泽窗）或使用等波纹（equiripple）方法，可控制通带/阻带波纹与过渡带宽度，从而间接控制副瓣水平。",
+    "image": "filter design concept: FIR impulse response taps and corresponding frequency response with ripple and sidelobes, sleek engineering visualization, no text"
+  },
+  {
+    "index": 15,
+    "voiceover": "在短时傅里叶变换（STFT）与声谱图中，窗长也会影响副瓣与分辨率。窗越长，频率分辨率越高，但时间分辨率越低；窗越短，时间定位更精准，但副瓣形态与泄漏特征会不同，需要结合音频内容权衡。",
+    "image": "time-frequency spectrogram panels comparing short vs long window: one with sharper time localization, another with sharper frequency localization, rich but clean color map"
+  },
+  {
+    "index": 16,
+    "voiceover": "一个典型实操流程：1）根据任务目标选择窗函数；2）选定窗长与重叠率；3）必要时进行零填充以细化读数；4）验证副瓣是否掩盖了目标成分，如果有，尝试更低副瓣窗或提高信噪比；5）对关键峰值做插值或拟合以提升频率估计精度。",
+    "image": "workflow infographic with 5 clean steps represented by icons: window selection, window length, zero padding, SNR improvement, peak interpolation, minimalist design"
+  },
+  {
+    "index": 17,
+    "voiceover": "总结一句话：副瓣是由有限长度分析与窗函数特性引起的频域次级峰。它们会导致谱泄漏、抬高底噪并影响频率估计。通过合适的窗函数、合理的窗长与分析策略，我们可以有效控制副瓣的影响，得到更可靠的音频分析结果。",
+    "image": "final summary visual: balanced spectrum with clear main lobe and well-suppressed sidelobes, clean modern aesthetic, calming blue tones, sense of clarity and control"
+  }
+]

@@ -11,9 +11,7 @@ from voiceGen import VoiceGen
 from datetime import datetime
 import videoEditor
 import shutil
-
-
-
+import random
 
 client = None
 imgClient = None
@@ -37,12 +35,20 @@ defaultConfigData = {
     "Img_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
     "Img_url": "https://api.poe.com/v1",
     "Img_model": "Gemini-2.5-Flash-Image",
+    "Img_stylePrompt": "In the style of simple pencil drawings",
+    "Img_local_model":"sd_xl_base_1.0.safetensors",
+    "Img_local_lora":None,
+    "Img_local_steps":20,
+    "Img_local_width": 576,
+    "Img_local_height": 1024,
+    "Img_local_random": True,
     "Img_runLocal": True,
     "Voice_Key": "INJEE4EZhJb9uyiiD8W-lrcqjyGDGWIPayxqy3pLK5w",
     "Voice_url": "https://api.poe.com/v1",
     "Voice_model": "Hailuo-Speech-02",
-    "Voice_runLocal": False,
+    "Voice_stylePrompt": "--language Chinese --speed 1.2 --voice Lively_Girl",
     "Voice_intro": "",
+    "Voice_runLocal": False,
     "custom_storyPath": None
 }
 
@@ -73,11 +79,38 @@ defaultStoryPrompt = """
 ]}
 """
 
-defaultImagePrompt = "生成涂鸦插画风格的图片"
 storyPrompt = None
 configData = None
 outputPath_storyBoard = currentDir
 
+def update_json_file(file_path):
+    from collections import OrderedDict
+    if os.path.exists(file_path):
+        with open(file_path, 'r') as file:
+            try:
+                existing_data = json.load(file, object_pairs_hook=OrderedDict)
+            except json.JSONDecodeError:
+                print("Error reading JSON file. Please check the file format.")
+                return
+    else:
+        print(f"File not found: {file_path}")
+        return
+    modified = False
+    existing_keys = set(existing_data.keys())
+    # Create an ordered dictionary for the new data
+    updated_data = OrderedDict()
+    for key, default_value in defaultConfigData.items():
+        if key not in existing_keys:
+            updated_data[key] = default_value
+            modified = True
+        else:
+            updated_data[key] = existing_data[key]
+    if modified:
+        with open(file_path, 'w') as file:
+            json.dump(updated_data, file, indent=4)
+        print("Json设置验证完毕, 存在新增字段")
+    else:
+        print("Json设置验证完毕, 无新增字段")
 
 def init():
     global defaultConfigData, configData, client, imgClient, storyPrompt, voiceClient, outputPath_storyBoard
@@ -85,21 +118,41 @@ def init():
     promptFile_story = os.path.join(currentDir, "prompt_分镜.txt")
     promptFile_image = os.path.join(currentDir, "prompt_图片.txt")
     promptFile_voice = os.path.join(currentDir, "prompt_语音.txt")
+
     try:
+        update_json_file(configFile)
         with open(configFile, 'r', encoding='utf-8') as file:
             configData = json.load(file)
             client = openai.OpenAI(api_key=configData["LLM_key"],base_url=configData["LLM_url"])
-            imgClient = ImageGen(key=configData["Img_Key"],url=configData["Img_url"], runLocal=configData["Img_runLocal"])
-            imgClient.model = configData["Img_model"]
+
             voiceClient = VoiceGen(key=configData["Voice_Key"],url=configData["Voice_url"], runLocal=configData["Voice_runLocal"])
             voiceClient.model = configData["Voice_model"]
+
+            imgClient = ImageGen(key=configData["Img_Key"],url=configData["Img_url"], runLocal=configData["Img_runLocal"])
+            imgClient.model = configData["Img_model"]
+            imgLocalConfigPath = os.path.join(currentDir, "prompt_ComfyUI.json")
+            if configData["Img_local_lora"] != None:
+                imgLocalConfigPath = os.path.join(currentDir, "prompt_ComfyUI_Lora.json")
+            with open(imgLocalConfigPath, "r", encoding='utf-8') as file:
+                data = json.load(file)
+                data["9"]["inputs"]["filename_prefix"] = "temp_ComfyImage"
+                data["4"]["inputs"]["ckpt_name"] = configData["Img_local_model"]
+                data["3"]["inputs"]["steps"] = configData["Img_local_steps"]
+                data["5"]["inputs"]["width"] = configData["Img_local_width"]
+                data["5"]["inputs"]["height"] = configData["Img_local_height"]
+                if configData["Img_local_random"]:
+                    data["3"]["inputs"]["seed"] = random.randint(0, 2_147_483_647)
+                if configData["Img_local_lora"] != None:
+                    data["11"]["inputs"]["lora_name"] = configData["Img_local_lora"]
+                imgClient.localConfig = data
+
             if configData["custom_storyPath"] != None:
                 outputPath_storyBoard =configData["custom_storyPath"]
                 print(f"**分镜会导出到:{outputPath_storyBoard}")
     except Exception as e:
         if os.path.exists(configFile):
             os.remove(configFile)
-        print(f"\n! config.json is corrupted or does not exists, creating a defualt config.json....")
+        print(f"\n! {e}\n! config.json is corrupted or does not exists, creating a defualt config.json....")
         with open(configFile, 'w', encoding='utf-8') as file:
             json.dump(defaultConfigData, file, ensure_ascii=False, indent=2)
         print("\n请确保config.json中的配置正确之后再重新运行")
@@ -126,14 +179,16 @@ def init():
         if not os.path.exists(promptFile_image):
             # Write the default content to the file with UTF-8 encoding
             with open(promptFile_image, 'w', encoding='utf-8') as file:
-                file.write(defaultImagePrompt)
+                file.write("")
                 print(f"\n没有找到图片prompt文件, 已自动创建默认prompt文件: {promptFile_image}")
                 imgClient.systemPrompt = defaultStoryPrompt
         # Read the file and extract content as a single string with UTF-8 encoding
         with open(promptFile_image, 'r', encoding='utf-8') as file:
             imgClient.systemPrompt = file.read()
+            if isinstance(configData["Img_stylePrompt"], str): #如有, Config里的图片prompt会覆写txt prompt的内容
+                if configData["Img_stylePrompt"] != "":
+                    imgClient.systemPrompt = configData["Img_stylePrompt"]
             if imgClient.systemPrompt == "":
-                imgClient.systemPrompt = defaultImagePrompt
                 print(f"\n你没有写图片prompt, 图片生成时不会使用system prompt")
             else:
                 print(f"\n**读取到自定义图片prompt:\n{imgClient.systemPrompt}")
@@ -141,16 +196,15 @@ def init():
         print(f"\n处理图片prompt文件时遇到错误: {e}")
     try:
         if not os.path.exists(promptFile_voice):
-            # Write the default content to the file with UTF-8 encoding
             with open(promptFile_voice, 'w', encoding='utf-8') as file:
                 file.write("")
-                print(f"\n没有找到语音prompt文件, 已自动创建默认prompt文件: {promptFile_voice}")
                 voiceClient.voiceParams = ""
-        # Read the file and extract content as a single string with UTF-8 encoding
         with open(promptFile_voice, 'r', encoding='utf-8') as file:
             voiceClient.voiceParams = file.read()
+            if isinstance(configData["Voice_stylePrompt"], str): #如有, Config里的语音prompt会覆写txt prompt的内容
+                if configData["Voice_stylePrompt"] != "":
+                    imgClient.systemPrompt = configData["Voice_stylePrompt"]
             if voiceClient.voiceParams == "":
-                voiceClient.voiceParams = defaultImagePrompt
                 print(f"\n你没有写语音prompt风格参数, 将使用模型的默认风格")
             else:
                 print(f"\n**读取到自定义语音prompt:\n{voiceClient.voiceParams}")
