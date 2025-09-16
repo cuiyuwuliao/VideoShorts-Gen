@@ -11,13 +11,19 @@
 如不需要GUI,或者在mac上运行, 可以直接用python运行shortsGen.py
 
 配置解释：
-"LLM_key": "语言模型服务的API key",
-"LLM_model": "用来生成视频分镜的语言模型",
-"LLM_url": "语言模型服务的地址",
-"LLM_maxToken": 限制token数量,
-"Img_Key": "图像模型服务的API key",
-"Img_url": "图像模型服务的地址",
-"Img_model": "用来生成分镜图的图像模型",
+"LLM_key": "语言模型服务的API key"
+
+"LLM_model": "用来生成视频分镜的语言模型"
+
+"LLM_url": "语言模型服务的地址"
+
+"LLM_maxToken": 限制token数量
+
+"Img_Key": "图像模型服务的API key"
+
+"Img_url": "图像模型服务的地址"
+
+"Img_model": "用来生成分镜图的图像模型"
 "Img_stylePrompt": "在这里用英文描述生成图像的风格, 也可以不描述",
 "Img_local_model": "comfyUI中的图像模型文件名(model.safetensors), 必须先本地启动了ComfyUI才能正常使用, 且模型必须在ComfyUI的checkpoints根目录下",
 "Img_local_lora": "comfyUI中的图像LoRA模型名称(model.safetensors), 必须先本地启动了ComfyUI才能正常使用, 且模型必须在ComfyUI的loras根目录下, 如果看不懂或不需要使用LoRA可以填null",
