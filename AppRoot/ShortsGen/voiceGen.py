@@ -22,7 +22,7 @@ else:
 client_local = None
 
 
-# 本地生成函数, 需要打开并设置好本地服务器再使用
+# 本地模型生成范例, 需要打开并设置好本地服务器再使用
 def generateVoice_local(prompt, outputPath):
     global client_local
     if client_local == None:
@@ -71,7 +71,6 @@ class VoiceGen:
     model = "Hailuo-Speech-02"
     runLocal = False
     voiceParams = ""
-    windowsEngine = None
     def __init__(self, url, key, runLocal = False):
         if runLocal:
             self.runLocal = runLocal
