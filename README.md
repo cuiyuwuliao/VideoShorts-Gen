@@ -9,6 +9,9 @@
 5. 点击"ShortsGen.exe->Home->"从稿子生成视频"即可一键生成视频(支持通过txt文件, Youtube链接, 或已生成好的分镜稿, 也可以直接输入"-t 要生成的内容"，如:"-t 用八岁小孩能理解的方式解释傅里叶变换的原理和运用")
 
 
+###如果需要修改分镜prompt，直接编辑AppRoot\ShortsGen\prompt_分镜.txt即可
+
+
 运行Setup然后运行: AppRoot\ShortsGen.exe
 如不需要GUI,或者在mac上运行, 可以直接用python运行shortsGen.py
 
@@ -27,7 +30,7 @@
 
 "Img_model": "用来生成分镜图的图像模型"
 
-"Img_stylePrompt": "在这里用英文描述生成图像的风格, 也可以不描述"
+"Img_stylePrompt": "用英文描述生成图像的风格, 也可以不描述, 如果要写很长, 可以把这里留空然后填写到AppRoot\ShortsGen\prompt_图片.txt"
 
 "Img_local_model": "comfyUI中的图像模型文件名(model.safetensors), 必须先本地启动了ComfyUI才能正常使用, 且模型必须在ComfyUI的checkpoints根目录下"
 
@@ -49,7 +52,7 @@
 
 "Voice_model": "要使用的tts语音模型"
 
-"Voice_stylePrompt": "--language Chinese --speed 1.2 --voice Lively_Girl"
+"Voice_stylePrompt": "语音生成的自定义参数, 可以不填, 填写方式需要符合API服务的要求, 如果要写很长, 可以把这里留空然后填写到AppRoot\ShortsGen\prompt_语音.txt"
 
 "Voice_intro": "视频的开场白, 可以写任意内容"
 
