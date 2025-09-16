@@ -480,6 +480,7 @@ if __name__ == "__main__":
         arg = None
         filePath = ""
         fileList = []
+        extraImgBatch = ""
         if len(sys.argv) > 1:
             arg = sys.argv[1]
             if len(sys.argv) > 2:
@@ -501,6 +502,15 @@ if __name__ == "__main__":
         if arg == "2":
             while filePath == "" or not os.path.exists(filePath):
                 filePath = remove_quotes(input("拖入分镜稿, 仅生成图片: \n"))
+            while True:
+                extraImgBatch = input("要额外生成多少批？(输入整数, 不输入则不额外生成): ")
+                if extraImgBatch.isdigit():
+                    extraImgBatch = int(extraImgBatch)
+                    if extraImgBatch > 0:
+                        break
+                if extraImgBatch == "" or extraImgBatch == None:
+                    extraImgBatch = 0
+                    break
                 
 
         if arg == "3":
@@ -509,7 +519,7 @@ if __name__ == "__main__":
 
         if arg == "4":
             while len(fileList) == 0:
-                filePath = input("拖入需要重新生成的文件(分镜稿, 图片或语音): \n")
+                filePath = input("拖入需要重新生成的文件(分镜稿, 图片, 语音, srt字幕): \n")
                 fileList_unchecked = filePath.split(" ")
                 hasStoryBoard = False
                 for file in fileList_unchecked:
@@ -572,6 +582,18 @@ if __name__ == "__main__":
             print("\n\n开始生成图片")
             print("------------------------------")
             generateImages(storyBoard, folderPath)
+            if isinstance(extraImgBatch, int) and extraImgBatch > 0:
+                batchIndex = 1
+                for _ in range(extraImgBatch):
+                    print(f"正在生成额外的批次({batchIndex}/{extraImgBatch})")
+                    batchFolder = os.path.join(folderPath, f"extra_{batchIndex}")
+                    increment = 1
+                    while os.path.exists(batchFolder):
+                        batchFolder = os.path.join(folderPath, f"extra_{batchIndex + increment}")
+                        increment += 1
+                    os.mkdir(batchFolder)
+                    generateImages(storyBoard, batchFolder)
+                    batchIndex += 1
             print("------------------------------")
             print("图片生成完毕")
 

@@ -61,6 +61,9 @@ def generate_image_comfyUI(prompt, outputPath, comfyUIConfig = None):
         comfyTempDir = os.path.join(os.path.expanduser("~"), "Downloads/comfyTemp")
     os.makedirs(comfyTempDir, exist_ok=True)
     comfyUIConfig["6"]["inputs"]["text"] = prompt
+    for filename in os.listdir(comfyTempDir):
+        if filename.startswith("temp_ComfyImage") and filename.endswith(".png"):
+            os.remove(os.path.join(comfyTempDir,filename))
     response = requests.post(API_URL, json={"prompt" : comfyUIConfig})
     if response.status_code == 200:
         import time
