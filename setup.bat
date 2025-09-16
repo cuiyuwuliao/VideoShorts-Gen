@@ -12,8 +12,6 @@ if %errorlevel% neq 0 (
 )
 
 cd /d "%~dp0"
-echo Running second.bat as Administrator...
-call runas /user:Administrator "git_pull.bat"
 pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 
 
