@@ -2,7 +2,7 @@
 使用说明
 1. 第一次运行时, 运行Setup.bat
 2. 运行AppRoot\ShortsGen.exe
-3. 第一次运行时, 先点击一下Home页面的任意功能按钮, 会自动生成样本配置(config.json)，之后可以在setting中打开
+3. 第一次运行时, 先点击一下Home页面的任意功能按钮, 会自动生成样本配置(config.json)，之后可以在"ShortsGen.exe->setting->API和模型相关设置"中进行配置
 4. 在"ShortsGen.exe->setting->API和模型相关设置" 中配置模型，根据样本的数据形和下面的"配置解释"来进行配置
 5. 点击"ShortsGen.exe->Home->"从稿子生成视频"即可一键生成视频(支持通过txt文件, Youtube链接, 或已生成好的分镜稿, 也可以直接输入"-t 要生成的内容"，如:"-t 用八岁小孩能理解的方式解释傅里叶变换的原理和运用")
 
