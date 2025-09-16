@@ -54,7 +54,11 @@ def encode_image_to_base64(image_path):
 # 首先需要把comfyUI->设置->服务器配置里: 输出路径改为"C:\\comfyTemp", 端口号改为7860
 def generate_image_comfyUI(prompt, outputPath, comfyUIConfig = None):
     API_URL = "http://127.0.0.1:7860/prompt"
-    comfyTempDir = "C:\\comfyTemp"
+    comfyTempDir = ""
+    if os.name == "nt":
+        comfyTempDir = "C:\\comfyTemp"
+    else:
+        comfyTempDir = os.path.join(os.path.expanduser("~"), "Downloads/comfyTemp")
     os.makedirs(comfyTempDir, exist_ok=True)
     comfyUIConfig["6"]["inputs"]["text"] = prompt
     response = requests.post(API_URL, json={"prompt" : comfyUIConfig})
@@ -70,6 +74,10 @@ def generate_image_comfyUI(prompt, outputPath, comfyUIConfig = None):
     else:
         print(f"comfyUI图片生成失败: {response.status_code}, {response.text}")
         return None
+    
+if __name__ == "__main__":
+    print(os.listdir(os.path.join(os.path.expanduser("~"), "Downloads/comfyTemp")))
+    
 
 
 

@@ -106,8 +106,8 @@ def update_json_file(file_path):
         else:
             updated_data[key] = existing_data[key]
     if modified:
-        with open(file_path, 'w') as file:
-            json.dump(updated_data, file, indent=4)
+        with open(file_path, 'w', encoding='utf-8') as file:
+            json.dump(updated_data, file, indent=4, ensure_ascii=False)
         print("Json设置验证完毕, 存在新增字段")
     else:
         print("Json设置验证完毕, 无新增字段")
