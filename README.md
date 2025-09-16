@@ -12,10 +12,13 @@
 ###如果需要修改分镜prompt，直接编辑AppRoot\ShortsGen\prompt_分镜.txt即可
 
 
-运行Setup然后运行: AppRoot\ShortsGen.exe
-如不需要GUI,或者在mac上运行, 可以直接用python运行shortsGen.py
+
+###如不需要GUI,或者在mac上运行, 可以直接用python运行shortsGen.py
+
+
 
 配置解释：
+
 "LLM_key": "语言模型服务的API key"
 
 "LLM_model": "用来生成视频分镜的语言模型"
