@@ -30,6 +30,7 @@ else:
 defaultConfigData = {
     "LLM_key": "Your POE.com API KEY",
     "LLM_model": "GPT-5",
+    "LLM_model_secondary": "Assistant",
     "LLM_url": "https://api.poe.com/v1", 
     "LLM_maxToken": 5000,
     "Img_Key": "Your POE.com API KEY",
@@ -227,12 +228,14 @@ def extract_youtube_video_id(url):
     return None
 
 
-def getContentFromLink(videoLink):
+def getContentFromLink(videoLink, llmFix = True):
     ytt_api = YouTubeTranscriptApi()
     result = ytt_api.fetch(extract_youtube_video_id(videoLink), languages=["zh", "en"])
     content = ""
     for chunk in result.snippets:
         content += chunk.text
+    if llmFix:
+        content = sendPrompt(f"{content}\n\n这是一个YouTube视频稿, 删除其中包含的任何广告或频道推广相关的内容, 然后返回视频稿")
     return content
 
 def extract_json_content_regex(text):
@@ -293,7 +296,7 @@ def generateStoryBoard(content, outputPath = None):
         print(f"!_错误: {e}!_")
         return None, None
     
-def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPrompt = ""):
+def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPrompt = "", model = None):
     formatInstruction = """\nDo not reiterate the input, Your response must be enclosed as a child oject in the following json structure\n
     {"response":"your response"}
     """ 
@@ -301,10 +304,14 @@ def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPromp
         formatInstruction = "\ncrucial: your job is to modify the input json data, and your response should be in the exact same format as the input"
     systemPrompt += formatInstruction
     try:
-        model = configData["LLM_model"]
+        if model == None:
+            if configData["LLM_model_secondary"] not in ["", None]:
+                model = configData["LLM_model_secondary"]
+            else:
+                model = configData["LLM_model"]
         print(f"systemPrompt: {systemPrompt}")
         print(f"userPrompt: {userPrompt}")
-        print("####AI请求开始####")
+        print(f"####AI请求开始####--{model}")
         completion = client.chat.completions.create(
             model=model,
             max_tokens=configData["LLM_maxToken"],
@@ -325,7 +332,10 @@ def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPromp
         result = extract_json_content_regex(result)
         result = json.loads(result)
         if not modifyJson:
-            result = result["response"]
+            try:
+                result = result["response"]
+            except Exception:
+                print("! AI返回格式可能有误")
         return result
     except Exception as e:
         print(f"!_错误: {e}!_")
@@ -555,7 +565,7 @@ if __name__ == "__main__":
         if arg in ["1", "2", "3", "5"]:
             if filePath.startswith("http"):
                 videoLink = filePath
-                content = getContentFromLink(videoLink)
+                content = getContentFromLink(videoLink, llmFix = True)
                 print(f"{content}\n以上为提取到的内容")
             elif filePath.endswith(".txt"): 
                 with open(filePath, 'r', encoding='utf-8') as file:
