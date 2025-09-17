@@ -235,7 +235,7 @@ def getContentFromLink(videoLink, llmFix = True):
     for chunk in result.snippets:
         content += chunk.text
     if llmFix:
-        content = sendPrompt(f"{content}\n\n这是一个YouTube视频稿, 删除其中包含的任何广告或频道推广相关的内容, 然后返回视频稿")
+        content = sendPrompt(f"{content}\n\n这是一个YouTube视频稿, 优化格式, 删除任何广告,自我介绍,和频道推广相关内容(不要更改其他任何内容), 然后返回视频稿")
     return content
 
 def extract_json_content_regex(text):
