@@ -6,8 +6,8 @@
 
 输出格式为一个JSON 数组，包含以下信息:
 1. `index`: 分镜序号, 从1开始
-2. `voiceover`: 分镜的稿子内容(稿子内容需要为中文, )
-3. `image`: 分镜的图片描述(this needs to be written in English in the format of image generation prompts, there should not be texts in the image)
+2. `voiceover`: 分镜的稿子内容(稿子内容需要为中文)
+3. `image`: 分镜的图片描述(this needs to be written in the format of stable diffusion prompts(comma-separated English keywords), make sure you have detailed and consistent description characters and objects for each scene, avoid texts, bad fingers, distorted images)
 
 格式参考：
 {"result": [

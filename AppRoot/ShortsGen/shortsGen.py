@@ -501,9 +501,9 @@ if __name__ == "__main__":
             
         if arg == "2":
             while filePath == "" or not os.path.exists(filePath):
-                filePath = remove_quotes(input("拖入分镜稿, 仅生成图片: \n"))
+                filePath = remove_quotes(input("拖入分镜稿, 可以生成额外批次的图片: \n"))
             while True:
-                extraImgBatch = input("要额外生成多少批？(输入整数, 不输入则不额外生成): ")
+                extraImgBatch = input("要生成多少批? 输入一个整数(不输入会重做当前图片): ")
                 if extraImgBatch.isdigit():
                     extraImgBatch = int(extraImgBatch)
                     if extraImgBatch > 0:
@@ -511,7 +511,6 @@ if __name__ == "__main__":
                 if extraImgBatch == "" or extraImgBatch == None:
                     extraImgBatch = 0
                     break
-                
 
         if arg == "3":
             while filePath == "" or not os.path.exists(filePath):
@@ -581,7 +580,7 @@ if __name__ == "__main__":
         if arg in ["1", "2"]:
             print("\n\n开始生成图片")
             print("------------------------------")
-            generateImages(storyBoard, folderPath)
+            #是否是生成额外批次
             if isinstance(extraImgBatch, int) and extraImgBatch > 0:
                 batchIndex = 1
                 for _ in range(extraImgBatch):
@@ -592,8 +591,12 @@ if __name__ == "__main__":
                         batchFolder = os.path.join(folderPath, f"extra_{batchIndex + increment}")
                         increment += 1
                     os.mkdir(batchFolder)
+                    if imgClient.localConfig != None:
+                        imgClient.localConfig["3"]["inputs"]["seed"] = random.randint(0, 2_147_483_647)
                     generateImages(storyBoard, batchFolder)
                     batchIndex += 1
+            else:
+                generateImages(storyBoard, folderPath)
             print("------------------------------")
             print("图片生成完毕")
 
