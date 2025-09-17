@@ -3,7 +3,6 @@ import base64
 import os
 import json
 import shutil
-# Replace with your API URL
 
 
 # Function to generate an image using Draw Things API (img2img support)
@@ -14,11 +13,19 @@ def generate_image(prompt, outputPath, base64_image=None, comfyUIConfig = None):
 
     params = {
         "prompt": prompt,
-        "negative_prompt": "(bokeh, worst quality, low quality, normal quality, (variations):1.4), blur:1.5",
+        "negative_prompt": "(broken, worst quality, low quality, normal quality, (variations):1.4), blur:1.5",
         "seed": 4068211935,
         "steps": 4,
         "guidance_scale": 10,
         "batch_count": 1
+    }
+    params = {
+        "prompt": prompt,
+        # "negative_prompt": "(broken, worst quality, low quality, normal quality, (variations):1.4), blur:1.5",
+        # "seed": 4068211935,
+        # "steps": 4,
+        # "guidance_scale": 10,
+        # "batch_count": 1
     }
 
     # If base64_image is provided, use img2img mode
@@ -27,20 +34,25 @@ def generate_image(prompt, outputPath, base64_image=None, comfyUIConfig = None):
         params["denoising_strength"] = 0.75  # Adjust for img2img effect strength
 
     headers = {"Content-Type": "application/json"}
-
-    if comfyUIConfig == None:
+    response = None
+    try:
         response = requests.post(API_URL, json=params, headers=headers)
-        if response.status_code == 200:
-            data = response.json()
-            images = data.get("images", [])
-            if images:
-                with open(outputPath, "wb") as img_file:
-                    img_file.write(base64.b64decode(images[0]))
-                return outputPath
+    except Exception:
+        pass
+
+    if response != None and response.status_code == 200:
+        print("正在使用Draw things")
+        data = response.json()
+        images = data.get("images", [])
+        if images:
+            with open(outputPath, "wb") as img_file:
+                img_file.write(base64.b64decode(images[0]))
+            return outputPath
         else:
             print(f"Draw things 图片生成失败: {response.status_code}, {response.text}")
-        return None
+            return None
     else:
+        print("正在使用comfyUI")
         result = generate_image_comfyUI(prompt, outputPath, comfyUIConfig)
         if result != None:
             return result

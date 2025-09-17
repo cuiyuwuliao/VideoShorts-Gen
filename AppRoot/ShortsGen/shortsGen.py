@@ -203,7 +203,7 @@ def init():
             voiceClient.voiceParams = file.read()
             if isinstance(configData["Voice_stylePrompt"], str): #如有, Config里的语音prompt会覆写txt prompt的内容
                 if configData["Voice_stylePrompt"] != "":
-                    imgClient.systemPrompt = configData["Voice_stylePrompt"]
+                    voiceClient.voiceParams = configData["Voice_stylePrompt"]
             if voiceClient.voiceParams == "":
                 print(f"\n你没有写语音prompt风格参数, 将使用模型的默认风格")
             else:
