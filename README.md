@@ -10,16 +10,13 @@
 5. 点击"ShortsGen.exe->Home->"从稿子生成视频"即可一键生成视频(支持通过txt文件, Youtube链接, 或已生成好的分镜稿, 也可以直接输入"-t 要生成的内容"，如:"-t 用八岁小孩能理解的方式解释傅里叶变换的原理和运用")
 
 
-###如果需要修改分镜prompt，直接编辑AppRoot\ShortsGen\prompt_分镜.txt即可
 
-
-
-###如不需要GUI,或者在mac上运行, 可以直接用python运行shortsGen.py
+###如不需要GUI,或者在mac上运行, 可以直接运行shortsGen.py
 
 
 ###若要使用comfyUI进行本地生图, 需要在confyUI服务器设置里将端口号设置为7860, 导出路径设置为："C:\comfyTemp"(Windows) 或 "Users/你的用户名/Downloads/comfyTemp" (Mac)
 
-###Mac系统也可以通过Draw things本地生图, 需要开启服务器并将端口号设置为7860, 生成模型参数会沿用Draw things应用中当前的设置
+###Mac系统会优先通过Draw things本地生图, 需要开启服务器并将端口号设置为7860, 生成模型参数会沿用Draw things应用中的设置, 配置中填的参数会被忽略
 
 
 配置解释：
