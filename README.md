@@ -1,4 +1,5 @@
 一键通过YouTube视频链接或txt文本来生成视频
+支持Windows和mac运行
 
 
 使用说明
