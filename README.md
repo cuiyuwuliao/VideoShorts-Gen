@@ -31,6 +31,8 @@
 
 "LLM_maxToken": 限制token数量
 
+“LLM_storyboardPromptFile”: 指定其他分镜prompt文件(txt文件), 留空会使用默认prompt
+
 "Img_Key": "图像模型服务的API key"
 
 "Img_url": "图像模型服务的地址"
@@ -41,7 +43,9 @@
 
 "Img_local_model": "comfyUI中的图像模型文件名(model.safetensors), 必须先本地启动了ComfyUI才能正常使用, 且模型必须在ComfyUI的checkpoints根目录下"
 
-"Img_local_lora": "comfyUI中的图像LoRA模型名称(model.safetensors), 必须先本地启动了ComfyUI才能正常使用, 且模型必须在ComfyUI的loras根目录下, 如果看不懂或不需要使用LoRA可以填null"
+"Img_local_lora_1": "comfyUI中的图像LoRA模型名称(model.safetensors), 必须先本地启动了ComfyUI才能正常使用, 且模型必须在ComfyUI的loras根目录下, 如果看不懂或不需要使用LoRA可以填null"
+
+"Img_local_lora_2": "第二个lora的名称, 两个参数lora都分别允许填: null, 模型名称string, 或者含强度的模型名称-{"name": "模型名称string", "model_strengh": 0.9},
 
 "Img_local_steps": comfyUI模型的采样次数, 一般设置为20，采样次数越多通常效果越好, 但生成速度会变慢
 
