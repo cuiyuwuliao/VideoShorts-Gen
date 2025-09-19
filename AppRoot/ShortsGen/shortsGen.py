@@ -33,6 +33,7 @@ defaultConfigData = {
     "LLM_model_secondary": "Assistant",
     "LLM_url": "https://api.poe.com/v1", 
     "LLM_maxToken": 5000,
+    "LLM_storyboardPromptFile": None,
     "Img_Key": "Your POE.com API KEY",
     "Img_url": "https://api.poe.com/v1",
     "Img_model": "Gemini-2.5-Flash-Image",
@@ -125,6 +126,14 @@ def init():
         with open(configFile, 'r', encoding='utf-8') as file:
             configData = json.load(file)
             client = openai.OpenAI(api_key=configData["LLM_key"],base_url=configData["LLM_url"])
+
+            altStoryPromptFile = configData["LLM_storyboardPromptFile"]
+            if altStoryPromptFile != None and altStoryPromptFile != "" and isinstance(altStoryPromptFile, str):
+                if not altStoryPromptFile.endswith(".txt"):
+                    altStoryPromptFile = f"{altStoryPromptFile}.txt"
+                for root, dirs, files in os.walk(currentDir):
+                    if altStoryPromptFile in files:
+                        promptFile_story = os.path.join(root, altStoryPromptFile)
 
             voiceClient = VoiceGen(key=configData["Voice_Key"],url=configData["Voice_url"], runLocal=configData["Voice_runLocal"])
             voiceClient.model = configData["Voice_model"]

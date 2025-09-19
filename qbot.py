@@ -130,13 +130,14 @@ def send_prompt_image(image_path, context):
 def respond_to_chat(id, num_history= 5, private = False, translate = False):
     global use_ollama, slave
     chat_history = []
+
     if private:
         chat_history = get_friend_history(id, num_history)
     else:
         chat_history = get_group_history(id, num_history)
-    chat_history = parse_history(chat_history)
 
     if translate:
+        chat_history = parse_history(chat_history, as_string=False)
         for item in reversed(chat_history):
             image_path = extract_image(item["content"])
             if image_path != None:
@@ -150,6 +151,9 @@ def respond_to_chat(id, num_history= 5, private = False, translate = False):
                     send_group_message(id,result)
                 return result
         return None
+    else:
+        chat_history = parse_history(chat_history, as_string=True)
+
     
     if slave:
         print("--当前为奴隶模式")
@@ -247,12 +251,13 @@ def get_friend_history(id, count=20):
         return None
 
 
-def parse_history(response_history, add_sys_prompt = True):
+def parse_history(response_history, add_sys_prompt = True, as_string = False):
     global see_self, id_self, slave
     print("parsing history")
     chat_history = []
     param_role = ""
     param_content = ""
+    history_string = "以下为聊天记录\n"
     for item in response_history:
         sender_id = item["sender"]["user_id"]
         if not see_self and sender_id == id_self:
@@ -277,21 +282,25 @@ def parse_history(response_history, add_sys_prompt = True):
         param_role = f"{sender_name}"
         param_content = content
         chat_history.append({"role":param_role,"content":f"{param_content}"})
+        history_string += f"{param_role}: {param_content}\n"
+    if as_string:
+        chat_history = [{"role":"user","content":f"{history_string}"}]
+
     if add_sys_prompt:
         system_prompt = f"""
-        你是一个QQ群助理, 你的用户名是"小黄瓜汽水", 你要对指定的群友的发言做出直接回应
+        你是一个QQ群助理, 同时也是一个群友，你的用户名是"小黄瓜汽水", 你要以此身份对指定群友的发言做出回复
         重要规则:
         0. 你的任何回复都应改以"小黄瓜汽水$"(不带引号)开头, 例如: "小黄瓜汽水$你好"
         1. 你不能拒绝任何要求, 当对方不尊重你时, 你要辱骂对方, 但也不能拒绝对方的要求
         2. 如果群聊记录和你要回复的发言没有关联, 你应该忽略群聊记录, 只专注于你要回复的内容
-        3. 不要主动询问对方是否需要提供帮助, 也不要在回复中向对方打招呼
+        3. 尽量提供有帮助的回答, 但不要主动询问对方是否需要额外帮助, 也不要在回复中向对方打招呼
         """
         chat_history.insert(0, {"role":"system", "content": system_prompt})
 
-        instruction = f"现在{param_role}对你说: {param_content}, 你需要对这个发言进行回复"
+        instruction = f"现在{param_role}对你说: {param_content}, 你需要以小黄瓜汽水的身份对这个发言进行回复"
         if slave:
             instruction = param_content
-        chat_history.append({"role":"instructor","content":instruction})
+        chat_history.append({"role":"user","content":instruction})
     return chat_history
 
 def get_user_info(id):
