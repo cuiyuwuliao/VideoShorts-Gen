@@ -12,6 +12,10 @@ from datetime import datetime
 import videoEditor
 import shutil
 import random
+import os
+import subprocess
+
+
 
 client = None
 imgClient = None
@@ -39,7 +43,8 @@ defaultConfigData = {
     "Img_model": "Gemini-2.5-Flash-Image",
     "Img_stylePrompt": "In the style of simple pencil drawings",
     "Img_local_model":"sd_xl_base_1.0.safetensors",
-    "Img_local_lora":None,
+    "Img_local_lora_1": {"name":"blindbox_v1_mix.safetensors", "model_strengh":0.9},
+    "Img_local_lora_2": None,
     "Img_local_steps":20,
     "Img_local_width": 576,
     "Img_local_height": 1024,
@@ -84,6 +89,26 @@ defaultStoryPrompt = """
 storyPrompt = None
 configData = None
 outputPath_storyBoard = currentDir
+
+
+def open_directory(path):
+    """Open a directory in the file browser."""
+    # Normalize the path to make sure it exists
+    normalized_path = os.path.abspath(path)
+
+    if not os.path.exists(normalized_path):
+        print(f"The directory {normalized_path} does not exist.")
+        return
+    try:
+        if not os.path.isdir(normalized_path):
+            normalized_path = os.path.dirname(normalized_path)
+        print(f"open folder: {normalized_path}")
+        if os.name == "nt":  # Windows
+            os.startfile(normalized_path)
+        elif os.name == "posix":  # macOS
+            subprocess.run(["open", normalized_path])
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
 def update_json_file(file_path):
     from collections import OrderedDict
@@ -140,9 +165,15 @@ def init():
 
             imgClient = ImageGen(key=configData["Img_Key"],url=configData["Img_url"], runLocal=configData["Img_runLocal"])
             imgClient.model = configData["Img_model"]
-            imgLocalConfigPath = os.path.join(currentDir, "prompt_ComfyUI.json")
-            if configData["Img_local_lora"] != None:
-                imgLocalConfigPath = os.path.join(currentDir, "prompt_ComfyUI_Lora.json")
+            
+            loraList = [item for item in [configData["Img_local_lora_1"], configData["Img_local_lora_2"]] if isinstance(item,str) or isinstance(item,dict)]
+            imgLocalConfigPath = os.path.join(currentDir, "prompt_comfyUI.json")
+            if len(loraList) == 1:
+                print(f"使用lora: {loraList}")
+                imgLocalConfigPath = os.path.join(currentDir, "prompt_comfyUI_lora.json")
+            elif len(loraList) == 2:
+                print(f"使用lora: {loraList}")
+                imgLocalConfigPath = os.path.join(currentDir, "prompt_comfyUI_loras.json")
             with open(imgLocalConfigPath, "r", encoding='utf-8') as file:
                 data = json.load(file)
                 data["9"]["inputs"]["filename_prefix"] = "temp_ComfyImage"
@@ -152,17 +183,24 @@ def init():
                 data["5"]["inputs"]["height"] = configData["Img_local_height"]
                 if configData["Img_local_random"]:
                     data["3"]["inputs"]["seed"] = random.randint(0, 2_147_483_647)
-                if configData["Img_local_lora"] != None:
-                    data["11"]["inputs"]["lora_name"] = configData["Img_local_lora"]
                 imgClient.localConfig = data
+                comfyIndex = 11
+                for lora in loraList:
+                    if isinstance(lora, dict):
+                        data[str(comfyIndex)]["inputs"]["lora_name"] = lora["name"]
+                        data[str(comfyIndex)]["inputs"]["strength_model"] = lora["model_strengh"]
+                    else:
+                        data[str(comfyIndex)]["inputs"]["lora_name"] = lora
+                    comfyIndex = comfyIndex -1
 
             if configData["custom_storyPath"] != None:
                 outputPath_storyBoard =configData["custom_storyPath"]
                 print(f"**分镜会导出到:{outputPath_storyBoard}")
     except Exception as e:
+        input(f"\n! {e}\n! config.json不存在或格式错误, 按回车生成一份默认配置(会覆盖现有配置), 你也可以自行修复后重新运行")
         if os.path.exists(configFile):
             os.remove(configFile)
-        print(f"\n! {e}\n! config.json is corrupted or does not exists, creating a defualt config.json....")
+        
         with open(configFile, 'w', encoding='utf-8') as file:
             json.dump(defaultConfigData, file, ensure_ascii=False, indent=2)
         print("\n请确保config.json中的配置正确之后再重新运行")
@@ -350,7 +388,6 @@ def sendPrompt(userPrompt, systemPrompt= "", modifyJson = False, additionalPromp
         print(f"!_错误: {e}!_")
     
 
-
 def readStoryBoard(folderPath):
     if os.path.exists(folderPath):
         if os.path.isdir(folderPath):
@@ -376,9 +413,6 @@ def isValidStoryBoard(storyBoardData):
     except Exception:
         return False
     return True
-
-
-
 
 def generateVoiceOver(content, folderPath, index=None):
     for scene  in content:
@@ -408,6 +442,10 @@ def generateImages(content, folderPath, index=None):
             fileName = os.path.join(folderPath, f"{scene['index']}.png")
             print(f"生成图片: {imagePrompt} ")
             imgClient.generateImage(imagePrompt, fileName)
+
+def generateSingleImage(prompt, fileName):
+    imgClient.generateImage(prompt, fileName)
+    return fileName
 
 def copy_file_with_timestamp(file, cacheFile):
     timestamp = datetime.now().strftime("%m%d%H%M%S")
@@ -488,11 +526,8 @@ def remove_quotes(s):
         return s[1:-1]
     return s
 
-
-
-
-
 if __name__ == "__main__":
+    folderPath = ""
     try:
         init()
         print()
@@ -504,7 +539,7 @@ if __name__ == "__main__":
             arg = sys.argv[1]
             if len(sys.argv) > 2:
                 filePath = sys.argv[2]
-        choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4", "StoryBoard": "5", "caption": "6"}
+        choices = {"Video_Compose":"0", "Video_Generate":"1", "Image":"2", "Voice":"3", "Rework":"4", "StoryBoard": "5", "caption": "6", "singleImage":"7"}
         while arg not in choices.values():
             print("操作列表")
             for key, value in choices.items():
@@ -567,9 +602,24 @@ if __name__ == "__main__":
             while filePath == "" or not os.path.exists(filePath):
                 filePath = input("拖入要添加字幕的视频(优先使用同目录的同名srt文件,没有时自动生成)\n")
                 filePath = remove_quotes(filePath)
+        
+        if arg == "7":
+            folderPath = configData["custom_storyPath"]
+            if not os.path.exists(folderPath):
+                print("! 使用这个功能前, 你需要为custom_storyPath配置设置一个可以访问的文件夹路径")
+            else:
+                singleImagePrompt = input("输入图片生成prompt(comma-separated English keywords): ")
+                os.makedirs(os.path.join(folderPath, "IMAGES"), exist_ok=True)
+                folderPath = os.path.join(folderPath, "IMAGES")
+                timestamp = datetime.now().strftime("%m%d%H%M%S")
+                singleImagePath = os.path.join(folderPath, f"{timestamp}.png")
+                generateSingleImage(singleImagePrompt, singleImagePath)
+
+
+                
 
         content = ""
-        folderPath = ""
+        
         videoPath = ""
         if arg in ["1", "2", "3", "5"]:
             if filePath.startswith("http"):
@@ -628,6 +678,7 @@ if __name__ == "__main__":
 
         if arg in ["4"]:
             rework(fileList)
+            folderPath = fileList[0]
 
         if arg in ["0", "1"]:
             print("\n\n开始合成视频")
@@ -646,6 +697,7 @@ if __name__ == "__main__":
                 print("提示: 视频生成完毕, 正在生成字幕版视频, 若不需要可以直接关闭")
             else:
                 videoPath = filePath
+                folderPath = filePath
             print("\n\n开始添加字幕")
             print("------------------------------")
             srtFile = videoEditor.autoSubtitle(videoPath, render=False)
@@ -660,7 +712,10 @@ if __name__ == "__main__":
             print("------------------------------")
             print("字幕添加完毕")
         
-        input("\n@(^_^)@运行结束, 可以关闭咯!")
+        print(f"\n资产文件夹: {folderPath}")
+        input("@(^_^)@运行结束, 可以关闭咯! 你也可以按回车打开资产文件夹(若存在)")
+        
+        open_directory(folderPath)
     except Exception as e:
         print(f"!_错误: {e}!_")
         input("\n请按回车键退出")

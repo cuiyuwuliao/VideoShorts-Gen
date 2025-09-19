@@ -1,0 +1,13 @@
+﻿{
+  "BoxItems": [
+    {
+      "ImagePath": null,
+      "DisplayText": "单独生成图片",
+      "ContextMenu": "Home",
+      "Link": "cmd /c start python ${AppRoot}\\ShortsGen\\ShortsGen.py 7",
+      "AllowedExtensions": null,
+      "FilePath": null,
+      "IsLarge": false
+    }
+  ]
+}
