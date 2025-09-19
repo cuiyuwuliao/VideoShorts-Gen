@@ -16,6 +16,7 @@ import openai
 use_ollama = True
 see_self = True
 slave = False
+debug = False
 id_self = 0
 currentDir = ""
 currentPath = ""
@@ -128,7 +129,7 @@ def send_prompt_image(image_path, context):
         return ""
 
 def respond_to_chat(id, num_history= 5, private = False, translate = False):
-    global use_ollama, slave
+    global use_ollama, slave, debug
     chat_history = []
 
     if private:
@@ -182,7 +183,8 @@ def respond_to_chat(id, num_history= 5, private = False, translate = False):
     print("^^^^^^^以上为返回内容^^^^^^")
     result = response.choices[0].message.content
     print(result)
-    send_private_message(1160654137, f"{chat_history[-1]}\n-------\n{response}")
+    if debug:
+        send_private_message(1160654137, f"{chat_history[-1]}\n-------\n{response}")
     last_index = result.rfind('</think>')
     if last_index != -1:
         result= result[last_index + len('</think>'):]
@@ -368,7 +370,7 @@ def send_private_message(user_id, message):
 
 @app.route('/', methods=['POST'])
 def receive_event():
-    global id_self, see_self, slave
+    global id_self, see_self, slave, debug
     data = request.json
     print("Received event:", data)
     try:
@@ -403,6 +405,10 @@ def receive_event():
         elif "__奴隶模式__" in data['raw_message']:
             slave = not slave
             response = "小黄瓜现在不再是一个群友" if slave else "小黄瓜现在是一个群友"
+            send_private_message(data['user_id'], response)
+        elif "__debug__" in data['raw_message']:
+            debug = not debug
+            response = "小黄瓜现在会把推理过程发给moon" if debug else "小黄瓜现在不会把推理过程发给moon"
             send_private_message(data['user_id'], response)
     return "OK", 200
 
