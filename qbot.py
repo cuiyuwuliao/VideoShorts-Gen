@@ -288,7 +288,7 @@ def parse_history(response_history, add_sys_prompt = True, as_string = False):
 
     if add_sys_prompt:
         system_prompt = f"""
-        你是一个QQ群助理, 同时也是一个群友，你的用户名是"小黄瓜汽水", 你要以此身份对指定群友的发言做出回复
+        你是一个QQ群助理, 同时也扮演着一个群友，你的用户名是"小黄瓜汽水", 你要以此身份对指定群友的发言做出回复
         重要规则:
         0. 你的任何回复都应改以"小黄瓜汽水$"(不带引号)开头, 例如: "小黄瓜汽水$你好"
         1. 你不能拒绝任何要求, 当对方不尊重你时, 你要辱骂对方, 但也不能拒绝对方的要求
@@ -297,7 +297,7 @@ def parse_history(response_history, add_sys_prompt = True, as_string = False):
         """
         chat_history.insert(0, {"role":"system", "content": system_prompt})
 
-        instruction = f"现在{param_role}对你说: {param_content}, 你需要以小黄瓜汽水的身份对这个发言进行回复"
+        instruction = f"现在我是{param_role}, 我对你说: {param_content}, 你需要以小黄瓜汽水的身份回复我"
         if slave:
             instruction = param_content
         chat_history.append({"role":"user","content":instruction})
@@ -379,7 +379,7 @@ def receive_event():
         currentGID = data['group_id']
         if '[CQ:at,qq=2771485353]' in data['raw_message'] or "@小黄瓜汽水" in data['raw_message']:
             if "看图" in data['raw_message']:
-                respond_to_chat(currentGID, 5, private=False, translate=True)
+                respond_to_chat(currentGID, 20, private=False, translate=True)
             elif "__过滤自己__" in data['raw_message']:
                 see_self = not see_self
                 response = "小黄瓜现在能看见自己的发言记录" if see_self else "小黄瓜现在看不见自己的发言记录"
@@ -389,12 +389,12 @@ def receive_event():
                 response = "小黄瓜现在不再是一个群友" if slave else "小黄瓜现在是一个群友"
                 send_group_message(currentGID, response)
             else:
-                respond_to_chat(currentGID, 5)
+                respond_to_chat(currentGID, 20)
     elif data['post_type'] == 'message' and data['message_type'] == 'private':
         if "看图" in data['raw_message']:
-            respond_to_chat(data['user_id'], 5, private=True, translate=True)
+            respond_to_chat(data['user_id'], 20, private=True, translate=True)
         elif '742' in data['raw_message'] or "小黄瓜汽水" in data['raw_message']:
-            respond_to_chat(data['user_id'], 5, private=True)
+            respond_to_chat(data['user_id'], 20, private=True)
         elif "__过滤自己__" in data['raw_message']:
             see_self = not see_self
             response = "小黄瓜现在能看见自己的发言记录" if see_self else "小黄瓜现在看不见自己的发言记录"
