@@ -182,6 +182,7 @@ def respond_to_chat(id, num_history= 5, private = False, translate = False):
     print("^^^^^^^以上为返回内容^^^^^^")
     result = response.choices[0].message.content
     print(result)
+    send_private_message(1160654137, f"{chat_history[-1]}\n-------\n{response}")
     last_index = result.rfind('</think>')
     if last_index != -1:
         result= result[last_index + len('</think>'):]
